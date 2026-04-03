@@ -259,7 +259,7 @@ def api_run_workflow():
     tg_id = user.get("telegram_user_id") if user else None
 
     # Get API keys
-    leo_key = db.get_valid_api_key("v2")
+    leo_key = db.get_valid_api_key(content_type="image")
     freepik_key = None
     try:
         freepik_key = db.get_valid_freepik_key()

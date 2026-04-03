@@ -68,8 +68,8 @@ def decrement_user_usage(user_id, model_type="image"):
 
 # ── API Keys ────────────────────────────────────────
 
-def get_valid_api_key(key_type="v2"):
-    return _call("get_valid_api_key", key_type)
+def get_valid_api_key(content_type="image", lock=True, min_balance=0.10):
+    return _call("get_valid_api_key", content_type, lock, min_balance)
 
 def release_api_key(api_key):
     return _call("release_api_key", api_key)
