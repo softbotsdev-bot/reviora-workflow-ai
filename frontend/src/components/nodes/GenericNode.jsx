@@ -52,6 +52,7 @@ function GenericNode({ id, data, selected }) {
       const res = await apiFetch('/api/upload', { method: 'POST', body: formData });
       if (res.ok) {
         updateProp('file_url', res.url);
+        updateProp('file_name', file.name);
         toast.success('File uploaded');
       }
     } catch (e) {
@@ -146,15 +147,27 @@ function GenericNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* UPLOAD NODE */}
+          {/* UPLOAD NODE — competitor-style */}
           {nodeType === 'upload' && (
             <div className="ws-node-upload-zone">
               {properties.file_url ? (
-                <div className="ws-node-upload-preview">
-                  <img src={properties.file_url} alt="uploaded" />
-                  <button className="ws-node-upload-clear" onClick={() => updateProp('file_url', '')}>
-                    <FiTrash2 size={11} />
-                  </button>
+                <div className="ws-upload-filled">
+                  <div className="ws-upload-filename">
+                    <FiFolder size={12} />
+                    <span>{properties.file_name || 'uploaded file'}</span>
+                  </div>
+                  <div className="ws-upload-img-wrap">
+                    <img src={properties.file_url} alt="uploaded" className="ws-upload-img" />
+                    <button className="ws-upload-remove" onClick={() => { updateProp('file_url', ''); updateProp('file_name', ''); }} title="Remove">
+                      <FiTrash2 size={12} />
+                    </button>
+                  </div>
+                  <label className="ws-upload-add-btn">
+                    <input ref={fileRef} type="file" accept="image/*,video/*" style={{ display: 'none' }}
+                      onChange={(e) => { if (e.target.files[0]) handleUpload(e.target.files[0]); }}
+                    />
+                    + Replace Image
+                  </label>
                 </div>
               ) : (
                 <label className="ws-node-upload-drop"
@@ -165,8 +178,8 @@ function GenericNode({ id, data, selected }) {
                     onChange={(e) => { if (e.target.files[0]) handleUpload(e.target.files[0]); }}
                   />
                   <div className="ws-upload-placeholder">
-                    <FiFolder size={22} />
-                    <span>Drop file or click</span>
+                    <FiUpload size={26} />
+                    <span>Drop image or click to upload</span>
                   </div>
                 </label>
               )}

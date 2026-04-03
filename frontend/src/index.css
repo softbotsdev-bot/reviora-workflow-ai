@@ -388,30 +388,54 @@ body {
 }
 .ws-node-inline-textarea::placeholder { color: var(--text-muted); }
 
-/* Upload drop zone */
+/* Upload drop zone — empty state */
 .ws-node-upload-drop {
   display: flex; align-items: center; justify-content: center;
-  min-height: 100px; border: 1.5px dashed var(--border);
-  border-radius: 8px; cursor: pointer; transition: all 0.2s;
+  min-height: 160px; border: 1.5px dashed var(--border);
+  border-radius: 10px; cursor: pointer; transition: all 0.2s;
 }
-.ws-node-upload-drop:hover { border-color: var(--accent); background: rgba(99,102,241,0.04); }
+.ws-node-upload-drop:hover { border-color: var(--accent); background: rgba(99,102,241,0.05); }
 .ws-upload-placeholder {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  color: var(--text-muted); font-size: 11px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--text-muted); font-size: 12px;
 }
-.ws-node-upload-preview { position: relative; border-radius: 8px; overflow: hidden; }
-.ws-node-upload-preview img {
-  width: 100%; max-height: 140px; object-fit: cover; display: block;
+
+/* Upload filled state — competitor-style */
+.ws-upload-filled {
+  display: flex; flex-direction: column; gap: 0;
 }
-.ws-node-upload-clear {
-  position: absolute; top: 6px; right: 6px;
-  width: 22px; height: 22px; border: none; border-radius: 50%;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); color: #fff; cursor: pointer;
+.ws-upload-filename {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 0 8px; font-size: 11px; font-weight: 500;
+  color: var(--text-secondary);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.ws-upload-filename svg { color: var(--warning); flex-shrink: 0; }
+.ws-upload-img-wrap {
+  position: relative; border-radius: 10px; overflow: hidden;
+  background: var(--bg-tertiary);
+}
+.ws-upload-img {
+  width: 100%; max-height: 280px; object-fit: cover; display: block;
+}
+.ws-upload-remove {
+  position: absolute; top: 8px; right: 8px;
+  width: 26px; height: 26px; border: none; border-radius: 6px;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  color: #fff; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s; opacity: 0;
+  opacity: 0; transition: all 0.15s;
 }
-.ws-node-upload-preview:hover .ws-node-upload-clear { opacity: 1; }
-.ws-node-upload-clear:hover { background: var(--error); }
+.ws-upload-img-wrap:hover .ws-upload-remove { opacity: 1; }
+.ws-upload-remove:hover { background: var(--error); }
+.ws-upload-add-btn {
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px 0; margin-top: 8px;
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  cursor: pointer; border-radius: 6px;
+  transition: all 0.15s;
+}
+.ws-upload-add-btn:hover { color: var(--text-primary); background: var(--surface); }
 
 /* Preview area for gen nodes */
 .ws-node-preview-area {
