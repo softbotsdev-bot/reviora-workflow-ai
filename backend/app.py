@@ -136,12 +136,29 @@ def api_me():
 @app.route("/api/auth/link-telegram", methods=["POST"])
 @require_auth
 def api_link_telegram():
+    """Step 1: Request a verification code. User must send it to the bot."""
     data = request.get_json(silent=True) or {}
     tg_id = data.get("telegram_user_id")
     if not tg_id:
         return jsonify(ok=False, error="telegram_user_id required"), 400
 
-    db.ws_link_telegram(g.user_id, int(tg_id))
+    try:
+        tg_id = int(tg_id)
+    except (ValueError, TypeError):
+        return jsonify(ok=False, error="telegram_user_id must be a number"), 400
+
+    result = db.ws_request_telegram_link(g.user_id, tg_id)
+    if not result.get("ok"):
+        return jsonify(ok=False, error=result.get("error", "Link gagal")), 400
+
+    return jsonify(ok=True, code=result["code"])
+
+
+@app.route("/api/auth/unlink-telegram", methods=["POST"])
+@require_auth
+def api_unlink_telegram():
+    """Unlink Telegram from this WS account."""
+    db.ws_unlink_telegram(g.user_id)
     return jsonify(ok=True)
 
 

@@ -111,6 +111,15 @@ def ws_get_user(user_id):
 def ws_link_telegram(ws_user_id, telegram_user_id):
     return _call("ws_link_telegram", ws_user_id, telegram_user_id)
 
+def ws_request_telegram_link(ws_user_id, telegram_user_id):
+    return _call("ws_request_telegram_link", ws_user_id, telegram_user_id)
+
+def ws_verify_telegram_link(telegram_user_id, code):
+    return _call("ws_verify_telegram_link", telegram_user_id, code)
+
+def ws_unlink_telegram(ws_user_id):
+    return _call("ws_unlink_telegram", ws_user_id)
+
 def ws_save_workflow(user_id, workflow_id, name, graph_json):
     return _call("ws_save_workflow", user_id, workflow_id, name, graph_json)
 

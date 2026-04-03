@@ -835,6 +835,54 @@ body {
 }
 .ws-profile-logout:hover { background: #ef444415; color: var(--error); }
 
+/* Telegram link verified UI */
+.ws-tg-linked-section { display: flex; flex-direction: column; gap: 8px; }
+.ws-tg-unlink-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: none; color: var(--text-muted); cursor: pointer;
+  font-family: var(--font); font-size: 12px; transition: all 0.15s;
+  align-self: flex-start;
+}
+.ws-tg-unlink-btn:hover { border-color: var(--error); color: var(--error); }
+.ws-tg-unlink-btn:disabled { opacity: 0.5; cursor: wait; }
+
+.ws-tg-verify { display: flex; flex-direction: column; gap: 8px; }
+.ws-tg-verify-header {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--success);
+}
+.ws-tg-code-box {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; background: var(--bg-tertiary);
+  border: 1px solid var(--accent); border-radius: var(--radius);
+}
+.ws-tg-code-box code {
+  flex: 1; font-size: 15px; font-weight: 700;
+  color: var(--accent); font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+}
+.ws-tg-copy-btn {
+  padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+  background: none; color: var(--text-secondary); cursor: pointer;
+  transition: all 0.15s; display: flex; align-items: center;
+}
+.ws-tg-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ws-tg-expire { color: var(--text-muted); font-style: italic; font-size: 11px; }
+.ws-tg-verify-actions { display: flex; gap: 8px; }
+.ws-tg-refresh-btn, .ws-tg-retry-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: none; color: var(--text-secondary); cursor: pointer;
+  font-family: var(--font); font-size: 12px; transition: all 0.15s;
+}
+.ws-tg-refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ws-tg-retry-btn:hover { border-color: var(--text-primary); color: var(--text-primary); }
+.ws-tg-note {
+  font-size: 11px; color: var(--text-muted); margin-top: 4px;
+  font-style: italic;
+}
+
 /* ═══════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════ */
