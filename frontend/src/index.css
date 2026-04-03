@@ -464,18 +464,19 @@ body {
 .ws-node-toolbar button:hover { background: var(--surface); color: var(--text-primary); }
 .ws-node-toolbar button.toolbar-delete:hover { background: #ef444420; color: var(--error); }
 
-/* Handles — clean circles positioned outside node */
-.ws-handle-wrapper {
+/* Handles — competitor-style: dots on card border, labels outside */
+.ws-handle-row {
   position: absolute; z-index: 5;
-  display: flex; align-items: center;
+  display: flex; align-items: center; gap: 6px;
+  pointer-events: all;
 }
-.ws-handle-left {
-  left: 0; transform: translate(-50%, -50%);
-  flex-direction: row;
+.ws-handle-row-left {
+  left: -5px; /* half of handle width */
+  transform: translateY(-50%);
 }
-.ws-handle-right {
-  right: 0; transform: translate(50%, -50%);
-  flex-direction: row-reverse;
+.ws-handle-row-right {
+  right: -5px;
+  transform: translateY(-50%);
 }
 .ws-handle {
   width: 10px !important; height: 10px !important;
@@ -487,24 +488,18 @@ body {
   top: auto !important;
   transform: none !important;
   flex-shrink: 0;
+  cursor: crosshair;
 }
 .ws-handle:hover {
-  width: 14px !important; height: 14px !important;
-  box-shadow: 0 0 8px rgba(99,102,241,0.5);
+  width: 13px !important; height: 13px !important;
+  box-shadow: 0 0 8px currentColor;
 }
-.ws-handle-label {
+.ws-handle-tag {
   font-size: 10px; font-weight: 600;
   white-space: nowrap; pointer-events: none;
   text-transform: capitalize;
-  padding: 1px 5px; border-radius: 3px;
-  background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
 }
-.ws-handle-label-left {
-  margin-left: 6px; color: #e8a838;
-}
-.ws-handle-label-right {
-  margin-right: 6px; color: #818cf8;
-}
+
 
 /* Custom Context Menu */
 .ws-ctx-overlay {
