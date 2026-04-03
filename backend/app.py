@@ -38,6 +38,23 @@ os.makedirs(config.UPLOAD_DIR, exist_ok=True)
 _run_progress = {}   # run_id -> Queue for SSE
 _run_lock = threading.Lock()
 
+# ── Global JSON error handler ─────────────────────────
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    traceback.print_exc()
+    return jsonify(ok=False, error=str(e)), 500
+
+@app.errorhandler(404)
+def handle_404(e):
+    if request.path.startswith('/api/'):
+        return jsonify(ok=False, error='Not found'), 404
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.errorhandler(500)
+def handle_500(e):
+    return jsonify(ok=False, error=str(e)), 500
+
 
 # ════════════════════════════════════════════════════
 #  STATIC / SPA
@@ -62,18 +79,23 @@ def serve_static(path):
 
 @app.route("/api/auth/register", methods=["POST"])
 def api_register():
-    data = request.get_json(silent=True) or {}
-    email = data.get("email", "")
-    password = data.get("password", "")
-    name = data.get("display_name", "")
+    try:
+        data = request.get_json(silent=True) or {}
+        email = data.get("email", "")
+        password = data.get("password", "")
+        name = data.get("display_name", "")
 
-    user, err = register_user(email, password, name)
-    if err:
-        return jsonify(ok=False, error=err), 400
+        user, err = register_user(email, password, name)
+        if err:
+            return jsonify(ok=False, error=err), 400
 
-    # Auto-login after register
-    token, user_data, _ = login_user(email, password)
-    return jsonify(ok=True, token=token, user=user_data)
+        # Auto-login after register
+        token, user_data, _ = login_user(email, password)
+        return jsonify(ok=True, token=token, user=user_data)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify(ok=False, error=f"Server error: {str(e)}"), 500
 
 
 @app.route("/api/auth/login", methods=["POST"])
@@ -356,7 +378,17 @@ def api_run_events(run_id):
 
 @app.route("/api/health")
 def health():
-    return jsonify(ok=True, service="workflow-studio")
+    return jsonify(
+        ok=True,
+        service="workflow-studio",
+        config={
+            "db_api_url": bool(config.DB_API_URL),
+            "db_api_key": bool(config.DB_API_KEY),
+            "port": config.PORT,
+            "static_folder": app.static_folder,
+            "static_exists": os.path.isdir(app.static_folder) if app.static_folder else False,
+        }
+    )
 
 
 # ════════════════════════════════════════════════════

@@ -17,6 +17,13 @@ async function apiFetch(path, options = {}) {
     window.location.reload();
     throw new Error('Session expired');
   }
+  // Handle non-JSON responses (e.g. Flask 500 HTML error pages)
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    console.error('Non-JSON response:', res.status, text);
+    return { ok: false, error: `Server error (${res.status}): ${text.substring(0, 200)}` };
+  }
   return res.json();
 }
 
