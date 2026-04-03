@@ -471,12 +471,14 @@ body {
   pointer-events: all;
 }
 .ws-handle-row-left {
-  left: -5px; /* half of handle width */
+  right: calc(100% - 5px); /* anchor dot at left border, label extends left */
   transform: translateY(-50%);
+  flex-direction: row; /* [label] [dot] — label on left, dot on right (at border) */
 }
 .ws-handle-row-right {
-  right: -5px;
+  left: calc(100% - 5px); /* anchor dot at right border, label extends right */
   transform: translateY(-50%);
+  flex-direction: row; /* [dot] [label] — dot on left (at border), label on right */
 }
 .ws-handle {
   width: 10px !important; height: 10px !important;

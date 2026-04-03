@@ -92,12 +92,15 @@ function GenericNode({ id, data, selected }) {
 
       <div className={`ws-node ${selected ? 'selected' : ''} ${status === 'done' ? 'node-done' : ''} ${status === 'error' ? 'node-error' : ''} ${status === 'running' ? 'node-running' : ''}`}>
 
-        {/* Input handles — fixed positions on left edge, below header */}
+        {/* Input handles — left edge, labels outside card */}
         {inputs.map((inp, i) => {
           const handleColor = HANDLE_TYPE_COLORS[inp.type] || HANDLE_TYPE_COLORS.any;
-          const yPos = 52 + i * 32; // 52px = header height, 32px spacing
+          const yPos = 52 + i * 32;
           return (
           <div key={`in-${inp.name}`} className="ws-handle-row ws-handle-row-left" style={{ top: yPos }}>
+            <span className="ws-handle-tag" style={{ color: handleColor }}>
+              {inp.label || inp.name}{inp.required ? '*' : ''}
+            </span>
             <Handle
               type="target"
               position={Position.Left}
@@ -105,9 +108,6 @@ function GenericNode({ id, data, selected }) {
               style={{ background: handleColor }}
               className="ws-handle"
             />
-            <span className="ws-handle-tag" style={{ color: handleColor }}>
-              {inp.label || inp.name}{inp.required ? '*' : ''}
-            </span>
           </div>
         );})}
 
@@ -256,15 +256,12 @@ function GenericNode({ id, data, selected }) {
           </div>
         )}
 
-        {/* Output handles — fixed positions on right edge, below header */}
+        {/* Output handles — right edge, labels outside card */}
         {nodeOutputs.map((out, i) => {
           const handleColor = HANDLE_TYPE_COLORS[out.type] || HANDLE_TYPE_COLORS.any;
           const yPos = 52 + i * 32;
           return (
           <div key={`out-${out.name}`} className="ws-handle-row ws-handle-row-right" style={{ top: yPos }}>
-            <span className="ws-handle-tag" style={{ color: handleColor }}>
-              {out.label || out.name}
-            </span>
             <Handle
               type="source"
               position={Position.Right}
@@ -272,6 +269,9 @@ function GenericNode({ id, data, selected }) {
               style={{ background: handleColor }}
               className="ws-handle"
             />
+            <span className="ws-handle-tag" style={{ color: handleColor }}>
+              {out.label || out.name}
+            </span>
           </div>
         );})}
       </div>
