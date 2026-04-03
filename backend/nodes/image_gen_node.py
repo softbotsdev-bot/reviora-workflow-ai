@@ -99,7 +99,15 @@ class ImageGenNode(BaseNode):
             "authorization": f"Bearer {api_key}",
         }
 
-        # V2 API format (same as leonardo_api.py in the main bot)
+        # Handle reference image input
+        ref_data = inputs.get("reference", {})
+        ref_url = ref_data.get("url", "") if isinstance(ref_data, dict) else ""
+        leo_ref_id = None
+
+        if ref_url:
+            leo_ref_id = self._upload_ref_to_leonardo(ref_url, headers)
+
+        # V2 API format
         params = {
             "prompt": prompt_text + " Do not include any text, watermark, or logo in the image.",
             "width": width,
@@ -107,6 +115,14 @@ class ImageGenNode(BaseNode):
             "quantity": 1,
             "prompt_enhance": "OFF",
         }
+
+        # Add reference image guidance
+        if leo_ref_id:
+            params["guidances"] = {
+                "image_reference": [
+                    {"image": {"id": leo_ref_id, "type": "UPLOADED"}, "strength": "MID"}
+                ]
+            }
 
         payload = {
             "model": model_id,
@@ -172,6 +188,61 @@ class ImageGenNode(BaseNode):
                 raise ValueError("Image generation failed on server")
 
         raise ValueError("Image generation timed out")
+
+    def _upload_ref_to_leonardo(self, image_url, headers):
+        """Download image from URL and upload to Leonardo to get a reference image ID."""
+        import tempfile
+        import os
+        import json as json_mod
+
+        try:
+            # 1. Download the image
+            dl_resp = requests.get(image_url, timeout=30)
+            if dl_resp.status_code != 200:
+                print(f"[RefImage] Failed to download: {dl_resp.status_code}")
+                return None
+
+            content_type = dl_resp.headers.get("content-type", "image/jpeg")
+            ext = "jpg"
+            if "png" in content_type:
+                ext = "png"
+            elif "webp" in content_type:
+                ext = "webp"
+
+            # 2. Init upload on Leonardo
+            init_resp = requests.post(
+                f"{LEONARDO_BASE}/v1/init-image",
+                json={"extension": ext},
+                headers=headers,
+                timeout=15,
+            )
+            if init_resp.status_code != 200:
+                print(f"[RefImage] Init-image failed: {init_resp.status_code} - {init_resp.text}")
+                return None
+
+            init_data = init_resp.json().get("uploadInitImage", {})
+            image_id = init_data.get("id")
+            upload_url = init_data.get("url")
+            fields = json_mod.loads(init_data.get("fields", "{}"))
+
+            if not image_id or not upload_url:
+                print("[RefImage] Missing id or upload_url from init-image")
+                return None
+
+            # 3. Upload to Leonardo's S3 storage
+            mime = f"image/{ext}" if ext != "jpg" else "image/jpeg"
+            files_payload = {"file": (f"ref.{ext}", dl_resp.content, mime)}
+            upload_resp = requests.post(upload_url, data=fields, files=files_payload, timeout=30)
+            if upload_resp.status_code not in [200, 204]:
+                print(f"[RefImage] S3 upload failed: {upload_resp.status_code}")
+                return None
+
+            print(f"[RefImage] Uploaded successfully, ID: {image_id}")
+            return image_id
+
+        except Exception as e:
+            print(f"[RefImage] Error: {str(e)}")
+            return None
 
     def estimate_cost(self, properties):
         return 0.002
