@@ -19,6 +19,7 @@ import Sidebar from './Sidebar';
 import PropertiesPanel from './PropertiesPanel';
 import Toolbar from './Toolbar';
 import KeyboardShortcuts from './KeyboardShortcuts';
+import ProfileMenu from './ProfileMenu';
 import { useWorkflowStore, useAuthStore, toast } from '../store';
 
 const nodeTypes = {
@@ -308,10 +309,7 @@ export default function WorkflowEditor() {
             onClick={() => setShowShortcuts(true)}
             title="Keyboard Shortcuts (?)"
           ><FiCommand size={14} /></button>
-          <div className="ws-user-info">
-            <span>{user?.display_name || user?.email || 'User'}</span>
-            <button className="ws-logout-btn" onClick={logout}>Logout</button>
-          </div>
+          <ProfileMenu />
         </div>
       </header>
 
