@@ -347,7 +347,9 @@ body {
 /* Resizable prompt node */
 .ws-node-prompt {
   display: flex; flex-direction: column;
-  min-width: 260px; min-height: 200px;
+  min-width: 240px; min-height: 200px;
+  max-width: none; /* no max — fully resizable */
+  width: 100%; height: 100%;
 }
 .ws-node-prompt .ws-node-body {
   flex: 1; display: flex; flex-direction: column;

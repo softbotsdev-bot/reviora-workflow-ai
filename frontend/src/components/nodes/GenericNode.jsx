@@ -143,12 +143,6 @@ function GenericNode({ id, data, selected }) {
                 onChange={(e) => updateProp('text', e.target.value)}
                 placeholder="Write your prompt here..."
               />
-              <textarea
-                className="ws-node-inline-textarea ws-neg"
-                value={properties.negative_prompt || ''}
-                onChange={(e) => updateProp('negative_prompt', e.target.value)}
-                placeholder="Negative prompt (optional)..."
-              />
             </div>
           )}
 
