@@ -2,10 +2,14 @@ import { useWorkflowStore, apiFetch } from '../store';
 import { useCallback, useRef } from 'react';
 
 export default function PropertiesPanel() {
-  const { selectedNode, nodes, setNodes, nodeDefinitions } = useWorkflowStore();
+  const selectedNode = useWorkflowStore((s) => s.selectedNode);
+  const nodes = useWorkflowStore((s) => s.nodes);
+  const setNodes = useWorkflowStore((s) => s.setNodes);
+  const nodeDefinitions = useWorkflowStore((s) => s.nodeDefinitions);
   const fileInputRef = useRef(null);
 
-  const node = nodes.find((n) => n.id === selectedNode);
+  const node = selectedNode ? nodes.find((n) => n.id === selectedNode) : null;
+
   if (!node) {
     return (
       <aside className="ws-props-panel">
@@ -16,24 +20,30 @@ export default function PropertiesPanel() {
     );
   }
 
-  const def = nodeDefinitions.find((d) => d.type === node.data?.nodeType) || {};
+  // Use definition from server OR fallback to the one stored in node.data
+  const nodeType = node.data?.nodeType || node.type || 'unknown';
+  const serverDef = nodeDefinitions.find((d) => d.type === nodeType);
+  const embeddedDef = node.data?.definition || {};
+  const def = serverDef || embeddedDef;
+  const defProperties = def.properties || [];
   const properties = node.data?.properties || {};
 
-  const updateProperty = useCallback((key, value) => {
-    const updated = nodes.map((n) => {
+  const updateProperty = (key, value) => {
+    const currentNodes = useWorkflowStore.getState().nodes;
+    const updated = currentNodes.map((n) => {
       if (n.id !== selectedNode) return n;
       return {
         ...n,
         data: {
           ...n.data,
-          properties: { ...n.data.properties, [key]: value },
+          properties: { ...(n.data?.properties || {}), [key]: value },
         },
       };
     });
     setNodes(updated);
-  }, [nodes, selectedNode, setNodes]);
+  };
 
-  const handleFileUpload = useCallback(async (propName, file) => {
+  const handleFileUpload = async (propName, file) => {
     const formData = new FormData();
     formData.append('file', file);
     try {
@@ -47,7 +57,7 @@ export default function PropertiesPanel() {
     } catch (e) {
       console.error('Upload failed:', e);
     }
-  }, [updateProperty]);
+  };
 
   return (
     <aside className="ws-props-panel">
@@ -55,12 +65,21 @@ export default function PropertiesPanel() {
         <h3>Properties</h3>
         <div className="ws-props-node-type">
           <span className="ws-props-dot" style={{ background: def.color || '#666' }} />
-          {def.displayName || node.data?.nodeType}
+          {def.displayName || nodeType}
+        </div>
+        <div style={{ fontSize: 11, color: '#606078', marginTop: 4 }}>
+          ID: {node.id}
         </div>
       </div>
 
       <div className="ws-props-body">
-        {def.properties?.map((prop) => (
+        {defProperties.length === 0 && (
+          <div style={{ color: '#9090a8', fontSize: 13, padding: '8px 0' }}>
+            No configurable properties
+          </div>
+        )}
+
+        {defProperties.map((prop) => (
           <div key={prop.name} className="ws-prop-group">
             <label className="ws-prop-label">{prop.label || prop.name}</label>
 
@@ -71,7 +90,7 @@ export default function PropertiesPanel() {
                 value={properties[prop.name] ?? prop.default ?? ''}
                 onChange={(e) => updateProperty(prop.name, e.target.value)}
               >
-                {prop.options?.map((opt) => (
+                {(prop.options || []).map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
@@ -122,7 +141,7 @@ export default function PropertiesPanel() {
                   onChange={(e) => updateProperty(prop.name, parseFloat(e.target.value))}
                 />
                 <span className="ws-slider-val">
-                  {(properties[prop.name] ?? prop.default ?? 0.5).toFixed(1)}
+                  {Number(properties[prop.name] ?? prop.default ?? 0.5).toFixed(1)}
                 </span>
               </div>
             )}
@@ -153,22 +172,6 @@ export default function PropertiesPanel() {
             )}
           </div>
         ))}
-
-        {/* Run Selected button */}
-        <div className="ws-prop-section">
-          <h4>Run selected nodes</h4>
-          <div className="ws-prop-number">
-            <span>Number of runs</span>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button>−</button>
-              <span>1</span>
-              <button>+</button>
-            </div>
-          </div>
-          <button className="ws-run-selected-btn">
-            ▶ Run Selected
-          </button>
-        </div>
       </div>
     </aside>
   );
