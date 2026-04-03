@@ -120,6 +120,7 @@ export default function WorkflowEditor() {
   const [showWfMenu, setShowWfMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [uiMinimized, setUiMinimized] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [ctxMenu, setCtxMenu] = useState(null); // {x, y, nodeId?, edgeDrop?}
 
   // Initialize on mount
@@ -496,7 +497,16 @@ export default function WorkflowEditor() {
       </header>
 
       <div className="ws-main">
-        {!uiMinimized && <Sidebar />}
+        {!uiMinimized && !sidebarCollapsed && <Sidebar />}
+
+        {/* Sidebar collapse toggle */}
+        <button
+          className="ws-sidebar-toggle"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+        >
+          {sidebarCollapsed ? '▶' : '◀'}
+        </button>
 
         <div className="ws-canvas-wrapper" ref={reactFlowWrapper}>
           <ReactFlow
@@ -606,7 +616,7 @@ export default function WorkflowEditor() {
           )}
         </div>
 
-        {!uiMinimized && <PropertiesPanel />}
+        {selectedNode && <PropertiesPanel />}
       </div>
 
       {/* Keyboard Shortcuts Modal */}
