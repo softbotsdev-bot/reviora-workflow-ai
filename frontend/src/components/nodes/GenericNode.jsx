@@ -2,11 +2,11 @@ import { memo, useCallback, useRef } from 'react';
 import { Handle, Position, NodeToolbar } from '@xyflow/react';
 import {
   FiUpload, FiType, FiImage, FiFilm, FiEdit3, FiZap, FiMove, FiDownload,
-  FiCopy, FiTrash2, FiPlay, FiCheck, FiAlertTriangle, FiFolder
+  FiCopy, FiTrash2, FiPlay, FiCheck, FiAlertTriangle, FiFolder,
+  FiCrop, FiRefreshCw, FiMoreHorizontal,
 } from 'react-icons/fi';
 import { useWorkflowStore, apiFetch, toast } from '../../store';
 
-// Icon components per node type
 const NODE_ICON_MAP = {
   upload: FiUpload, prompt: FiType, image_gen: FiImage, image_edit: FiEdit3,
   image_enhance: FiZap, video_gen: FiFilm, video_motion: FiMove, output: FiDownload,
@@ -15,6 +15,13 @@ const NODE_ICON_MAP = {
 const NODE_COLORS = {
   upload: '#3b82f6', prompt: '#e8a838', image_gen: '#7c3aed', image_edit: '#8b5cf6',
   image_enhance: '#06b6d4', video_gen: '#ec4899', video_motion: '#f59e0b', output: '#10b981',
+};
+
+// Handle colors by data type — visual type matching
+const HANDLE_TYPE_COLORS = {
+  text: '#e8a838',   // orange — text/prompt
+  file: '#3b82f6',   // blue — image/video files
+  any:  '#6b7280',   // gray — accepts anything
 };
 
 function GenericNode({ id, data, selected }) {
@@ -57,46 +64,71 @@ function GenericNode({ id, data, selected }) {
   const resultUrl = outputs?.image?.url || outputs?.video?.url || null;
   const resultType = outputs?.video?.url ? 'video' : 'image';
 
+  // Get property display value
+  const getPropDisplay = (p) => {
+    if (p.type === 'select') {
+      return p.options?.find(o => o.value === (properties[p.name] ?? p.default))?.label || properties[p.name] || p.default || '-';
+    }
+    return properties[p.name] ?? p.default ?? '-';
+  };
+
   return (
     <>
-      <NodeToolbar isVisible={selected} position={Position.Top} offset={8}>
+      {/* Toolbar */}
+      <NodeToolbar isVisible={selected} position={Position.Top} offset={10}>
         <div className="ws-node-toolbar">
-          <button onClick={() => navigator.clipboard.writeText(id)} title="Copy ID">
-            <FiCopy size={14} />
-          </button>
+          <button onClick={() => navigator.clipboard.writeText(id)} title="Copy ID"><FiCopy size={13} /></button>
+          <button title="Edit"><FiEdit3 size={13} /></button>
+          <button title="Crop"><FiCrop size={13} /></button>
+          <button title="Refresh" onClick={() => toast.info('Rerun from main toolbar')}><FiRefreshCw size={13} /></button>
           <button onClick={() => {
             const nodes = useWorkflowStore.getState().nodes;
             useWorkflowStore.getState().setNodes(nodes.filter((n) => n.id !== id));
             useWorkflowStore.getState().setSelectedNode(null);
-          }} title="Delete">
-            <FiTrash2 size={14} />
-          </button>
+          }} title="Delete" className="toolbar-delete"><FiTrash2 size={13} /></button>
+          <button title="More"><FiMoreHorizontal size={13} /></button>
         </div>
       </NodeToolbar>
 
       <div className={`ws-node ${selected ? 'selected' : ''} ${status === 'done' ? 'node-done' : ''} ${status === 'error' ? 'node-error' : ''} ${status === 'running' ? 'node-running' : ''}`}>
-        {inputs.map((inp, i) => (
-          <div key={`in-${inp.name}`} className="ws-handle-wrapper ws-handle-left" style={{ top: `${30 + i * 20}%` }}>
+
+        {/* Input handles — positioned outside left edge */}
+        {inputs.map((inp, i) => {
+          const handleColor = HANDLE_TYPE_COLORS[inp.type] || HANDLE_TYPE_COLORS.any;
+          return (
+          <div key={`in-${inp.name}`} className={`ws-handle-wrapper ws-handle-left`} style={{ top: `${((i + 1) / (inputs.length + 1)) * 100}%` }}>
             <Handle
               type="target"
               position={Position.Left}
               id={inp.name}
-              style={{ background: color }}
+              style={{ background: handleColor, borderColor: `${handleColor}40` }}
               className="ws-handle"
             />
-            <span className="ws-handle-label ws-handle-label-left">
+            <span className={`ws-handle-label ws-handle-label-left`} style={{ color: handleColor }}>
               {inp.label || inp.name}{inp.required ? '*' : ''}
             </span>
           </div>
-        ))}
+        );})}
 
-        <div className="ws-node-header" style={{ background: `${color}cc` }}>
-          <IconComponent size={14} />
-          <span className="ws-node-title">{displayName}</span>
-          {status === 'running' && <div className="node-spinner" />}
-          {status === 'done' && <FiCheck size={14} className="ws-node-check" />}
+        {/* Header bar — compact with icon + name + model badge */}
+        <div className="ws-node-header">
+          <div className="ws-node-header-left">
+            <div className="ws-node-icon-badge" style={{ background: `${color}25`, color: color }}>
+              <IconComponent size={12} />
+            </div>
+            <span className="ws-node-title">{displayName}</span>
+          </div>
+          <div className="ws-node-header-right">
+            {nodeType !== 'prompt' && nodeType !== 'upload' && nodeType !== 'output' && (
+              <span className="ws-node-model-badge">{getPropDisplay(def.properties?.[0] || { name: 'model' })}</span>
+            )}
+            {status === 'running' && <div className="node-spinner" />}
+            {status === 'done' && <FiCheck size={13} className="ws-node-status-icon done" />}
+            {status === 'error' && <FiAlertTriangle size={13} className="ws-node-status-icon error" />}
+          </div>
         </div>
 
+        {/* Body */}
         <div className="ws-node-body">
           {/* PROMPT NODE */}
           {nodeType === 'prompt' && (
@@ -125,7 +157,7 @@ function GenericNode({ id, data, selected }) {
                 <div className="ws-node-upload-preview">
                   <img src={properties.file_url} alt="uploaded" />
                   <button className="ws-node-upload-clear" onClick={() => updateProp('file_url', '')}>
-                    <FiTrash2 size={12} />
+                    <FiTrash2 size={11} />
                   </button>
                 </div>
               ) : (
@@ -133,15 +165,11 @@ function GenericNode({ id, data, selected }) {
                   onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                   onDrop={(e) => { e.preventDefault(); e.stopPropagation(); if (e.dataTransfer.files[0]) handleUpload(e.dataTransfer.files[0]); }}
                 >
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*,video/*"
-                    style={{ display: 'none' }}
+                  <input ref={fileRef} type="file" accept="image/*,video/*" style={{ display: 'none' }}
                     onChange={(e) => { if (e.target.files[0]) handleUpload(e.target.files[0]); }}
                   />
                   <div className="ws-upload-placeholder">
-                    <FiFolder size={24} />
+                    <FiFolder size={22} />
                     <span>Drop file or click</span>
                   </div>
                 </label>
@@ -149,7 +177,7 @@ function GenericNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* IMAGE/VIDEO GEN NODES */}
+          {/* IMAGE/VIDEO GEN NODES — preview area */}
           {['image_gen', 'image_edit', 'image_enhance', 'video_gen', 'video_motion'].includes(nodeType) && (
             <div className="ws-node-preview-area">
               {resultUrl ? (
@@ -160,7 +188,8 @@ function GenericNode({ id, data, selected }) {
                 )
               ) : (
                 <div className="ws-node-preview-empty">
-                  <span>Results will appear here...</span>
+                  <div className="ws-preview-placeholder-icon"><IconComponent size={24} /></div>
+                  <span>Results will appear here.</span>
                 </div>
               )}
             </div>
@@ -182,30 +211,27 @@ function GenericNode({ id, data, selected }) {
                 </div>
               ) : (
                 <div className="ws-node-preview-empty output-empty">
-                  <span>Results will appear here...</span>
+                  <div className="ws-preview-placeholder-icon"><FiDownload size={24} /></div>
+                  <span>Output will appear here.</span>
                 </div>
               )}
             </div>
           )}
 
-          {/* Properties summary */}
-          {nodeType !== 'prompt' && nodeType !== 'upload' && (
-            <div className="ws-node-props-summary">
-              {(def.properties || []).slice(0, 3).map((p) => (
-                <div key={p.name} className="ws-node-prop">
-                  <span className="prop-key">{p.label || p.name}:</span>
-                  <span className="prop-val">{
-                    p.type === 'select'
-                      ? (p.options?.find(o => o.value === (properties[p.name] ?? p.default))?.label || properties[p.name] || p.default || '-')
-                      : (properties[p.name] ?? p.default ?? '-')
-                  }</span>
+          {/* Properties row — compact chips */}
+          {nodeType !== 'prompt' && nodeType !== 'upload' && (def.properties || []).length > 1 && (
+            <div className="ws-node-props-row">
+              {(def.properties || []).slice(1, 4).map((p) => (
+                <div key={p.name} className="ws-node-prop-chip">
+                  <span className="prop-chip-label">{p.label || p.name}</span>
+                  <span className="prop-chip-val">{getPropDisplay(p)}</span>
                 </div>
               ))}
             </div>
           )}
 
           {error && (
-            <div className="ws-node-error"><FiAlertTriangle size={12} /> {error}</div>
+            <div className="ws-node-error"><FiAlertTriangle size={11} /> {error}</div>
           )}
         </div>
 
@@ -221,28 +247,31 @@ function GenericNode({ id, data, selected }) {
               }}
             >
               {status === 'running' ? (
-                <><div className="node-spinner" /> Running...</>
+                <><div className="node-spinner" /> Generating...</>
               ) : (
-                <><FiPlay size={12} /> Run</>
+                <><FiPlay size={11} /> Run</>
               )}
             </button>
           </div>
         )}
 
-        {nodeOutputs.map((out, i) => (
-          <div key={`out-${out.name}`} className="ws-handle-wrapper ws-handle-right" style={{ top: `${30 + i * 20}%` }}>
+        {/* Output handles — positioned outside right edge */}
+        {nodeOutputs.map((out, i) => {
+          const handleColor = HANDLE_TYPE_COLORS[out.type] || HANDLE_TYPE_COLORS.any;
+          return (
+          <div key={`out-${out.name}`} className="ws-handle-wrapper ws-handle-right" style={{ top: `${((i + 1) / (nodeOutputs.length + 1)) * 100}%` }}>
             <Handle
               type="source"
               position={Position.Right}
               id={out.name}
-              style={{ background: color }}
+              style={{ background: handleColor, borderColor: `${handleColor}40` }}
               className="ws-handle"
             />
-            <span className="ws-handle-label ws-handle-label-right">
+            <span className="ws-handle-label ws-handle-label-right" style={{ color: handleColor }}>
               {out.label || out.name}
             </span>
           </div>
-        ))}
+        );})}
       </div>
     </>
   );

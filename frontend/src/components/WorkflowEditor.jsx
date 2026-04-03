@@ -11,6 +11,7 @@ import {
   BaseEdge,
   getBezierPath,
   EdgeLabelRenderer,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
@@ -242,8 +243,51 @@ export default function WorkflowEditor() {
     (changes) => setEdges(applyEdgeChanges(changes, useWorkflowStore.getState().edges)),
     [setEdges]
   );
+  // ── Type-safe connection validation ──
+  // Text handles can only connect to text inputs, file handles to file inputs
+  const isValidConnection = useCallback((connection) => {
+    const nodes = useWorkflowStore.getState().nodes;
+    const sourceNode = nodes.find(n => n.id === connection.source);
+    const targetNode = nodes.find(n => n.id === connection.target);
+    if (!sourceNode || !targetNode) return false;
+
+    // Don't allow self-connection
+    if (connection.source === connection.target) return false;
+
+    const srcDef = sourceNode.data?.definition || {};
+    const tgtDef = targetNode.data?.definition || {};
+    const srcOutput = (srcDef.outputs || []).find(o => o.name === connection.sourceHandle);
+    const tgtInput = (tgtDef.inputs || []).find(i => i.name === connection.targetHandle);
+    if (!srcOutput || !tgtInput) return false;
+
+    // Type compatibility: text→text, file→file, file→any (flexible)
+    const srcType = srcOutput.type || 'any';
+    const tgtType = tgtInput.type || 'any';
+    if (srcType === 'any' || tgtType === 'any') return true;
+    if (srcType === tgtType) return true;
+
+    // Block incompatible: text→file, file→text
+    return false;
+  }, []);
+
   const onConnect = useCallback(
-    (params) => setEdges(addEdge({ ...params, type: 'deletable', animated: true, style: { stroke: '#6366f1' } }, useWorkflowStore.getState().edges)),
+    (params) => {
+      // Validate before connecting
+      const nodes = useWorkflowStore.getState().nodes;
+      const sourceNode = nodes.find(n => n.id === params.source);
+      const targetNode = nodes.find(n => n.id === params.target);
+      const srcDef = sourceNode?.data?.definition || {};
+      const tgtDef = targetNode?.data?.definition || {};
+      const srcOutput = (srcDef.outputs || []).find(o => o.name === params.sourceHandle);
+      const tgtInput = (tgtDef.inputs || []).find(i => i.name === params.targetHandle);
+
+      if (srcOutput && tgtInput && srcOutput.type !== 'any' && tgtInput.type !== 'any' && srcOutput.type !== tgtInput.type) {
+        toast.error(`Cannot connect ${srcOutput.type} → ${tgtInput.type}`);
+        return;
+      }
+
+      setEdges(addEdge({ ...params, type: 'deletable', animated: true, style: { stroke: '#6366f1' } }, useWorkflowStore.getState().edges));
+    },
     [setEdges]
   );
   const onReconnect = useCallback(
@@ -374,6 +418,7 @@ export default function WorkflowEditor() {
             proOptions={{ hideAttribution: true }}
             edgesReconnectable
             deleteKeyCode={['Delete', 'Backspace']}
+            isValidConnection={isValidConnection}
           >
             <Background color="#333" gap={16} size={1} variant="dots" />
             <Controls className="ws-controls" />
