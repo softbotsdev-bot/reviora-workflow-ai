@@ -190,9 +190,8 @@ class ImageGenNode(BaseNode):
         raise ValueError("Image generation timed out")
 
     def _upload_ref_to_leonardo(self, image_url, headers):
-        """Download image from URL and upload to Leonardo to get a reference image ID."""
-        import tempfile
-        import os
+        """Download image from URL and upload to Leonardo to get a reference image ID.
+        NOTE: Everything is in-memory — no temp files are written to disk."""
         import json as json_mod
 
         try:
