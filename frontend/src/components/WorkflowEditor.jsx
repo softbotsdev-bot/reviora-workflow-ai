@@ -1,12 +1,12 @@
-import { useCallback, useRef, useMemo } from 'react';
+import { useCallback, useRef } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
   addEdge,
-  useNodesState,
-  useEdgesState,
+  applyNodeChanges,
+  applyEdgeChanges,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -31,41 +31,60 @@ const nodeTypes = {
 let nodeIdCounter = 0;
 
 export default function WorkflowEditor() {
-  const {
-    nodes, edges, setNodes, setEdges,
-    nodeDefinitions, loadNodeDefs,
-    selectedNode, setSelectedNode,
-    currentName, setCurrentName,
-    isRunning, runResults,
-  } = useWorkflowStore();
+  const nodes = useWorkflowStore((s) => s.nodes);
+  const edges = useWorkflowStore((s) => s.edges);
+  const setNodes = useWorkflowStore((s) => s.setNodes);
+  const setEdges = useWorkflowStore((s) => s.setEdges);
+  const nodeDefinitions = useWorkflowStore((s) => s.nodeDefinitions);
+  const loadNodeDefs = useWorkflowStore((s) => s.loadNodeDefs);
+  const selectedNode = useWorkflowStore((s) => s.selectedNode);
+  const setSelectedNode = useWorkflowStore((s) => s.setSelectedNode);
+  const currentName = useWorkflowStore((s) => s.currentName);
+  const setCurrentName = useWorkflowStore((s) => s.setCurrentName);
+  const isRunning = useWorkflowStore((s) => s.isRunning);
+  const runResults = useWorkflowStore((s) => s.runResults);
+
   const { user, logout } = useAuthStore();
   const reactFlowWrapper = useRef(null);
   const reactFlowInstance = useRef(null);
 
-  const [rfNodes, setRfNodes, onNodesChange] = useNodesState(nodes);
-  const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState(edges);
-
-  // Sync store ↔ ReactFlow
-  useEffect(() => { setRfNodes(nodes); }, [nodes]);
-  useEffect(() => { setRfEdges(edges); }, [edges]);
-  useEffect(() => { setNodes(rfNodes); }, [rfNodes]);
-  useEffect(() => { setEdges(rfEdges); }, [rfEdges]);
-
   // Load node definitions on mount
   useEffect(() => { loadNodeDefs(); }, []);
 
+  // Direct handlers — no bidirectional sync needed
+  const onNodesChange = useCallback(
+    (changes) => {
+      setNodes(applyNodeChanges(changes, useWorkflowStore.getState().nodes));
+    },
+    [setNodes]
+  );
+
+  const onEdgesChange = useCallback(
+    (changes) => {
+      setEdges(applyEdgeChanges(changes, useWorkflowStore.getState().edges));
+    },
+    [setEdges]
+  );
+
   const onConnect = useCallback(
-    (params) => setRfEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#6366f1' } }, eds)),
-    []
+    (params) => {
+      setEdges(
+        addEdge(
+          { ...params, animated: true, style: { stroke: '#6366f1' } },
+          useWorkflowStore.getState().edges
+        )
+      );
+    },
+    [setEdges]
   );
 
   const onNodeClick = useCallback((_, node) => {
     setSelectedNode(node.id);
-  }, []);
+  }, [setSelectedNode]);
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
-  }, []);
+  }, [setSelectedNode]);
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
@@ -85,7 +104,14 @@ export default function WorkflowEditor() {
 
       if (!position) return;
 
-      const def = nodeDefinitions.find((d) => d.type === type) || {};
+      const defs = useWorkflowStore.getState().nodeDefinitions;
+      const def = defs.find((d) => d.type === type) || {
+        type,
+        displayName: type,
+        inputs: [],
+        outputs: [],
+        properties: [],
+      };
       const defaultProps = {};
       (def.properties || []).forEach((p) => {
         defaultProps[p.name] = p.default ?? '';
@@ -102,9 +128,9 @@ export default function WorkflowEditor() {
         },
       };
 
-      setRfNodes((nds) => [...nds, newNode]);
+      setNodes([...useWorkflowStore.getState().nodes, newNode]);
     },
-    [nodeDefinitions]
+    [setNodes]
   );
 
   // Memoize minimap node color
@@ -145,8 +171,8 @@ export default function WorkflowEditor() {
         {/* Canvas */}
         <div className="ws-canvas-wrapper" ref={reactFlowWrapper}>
           <ReactFlow
-            nodes={rfNodes}
-            edges={rfEdges}
+            nodes={nodes}
+            edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
