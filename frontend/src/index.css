@@ -500,17 +500,17 @@ body {
   pointer-events: all;
 }
 .ws-handle-row-left {
-  right: calc(100% - 5px); /* anchor dot at left border, label extends left */
+  right: calc(100% - 7px);
   transform: translateY(-50%);
   flex-direction: row; /* [label] [dot] — label on left, dot on right (at border) */
 }
 .ws-handle-row-right {
-  left: calc(100% - 5px); /* anchor dot at right border, label extends right */
+  left: calc(100% - 7px);
   transform: translateY(-50%);
   flex-direction: row; /* [dot] [label] — dot on left (at border), label on right */
 }
 .ws-handle {
-  width: 10px !important; height: 10px !important;
+  width: 14px !important; height: 14px !important;
   border: 2px solid var(--bg-secondary) !important;
   border-radius: 50% !important;
   transition: all 0.15s !important;
@@ -522,7 +522,7 @@ body {
   cursor: crosshair;
 }
 .ws-handle:hover {
-  width: 13px !important; height: 13px !important;
+  width: 18px !important; height: 18px !important;
   box-shadow: 0 0 8px currentColor;
 }
 .ws-handle-tag {
