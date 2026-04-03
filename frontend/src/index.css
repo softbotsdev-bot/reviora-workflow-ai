@@ -528,6 +528,10 @@ body {
 }
 .ws-node-toolbar button:hover { background: var(--surface); color: var(--text-primary); }
 .ws-node-toolbar button.toolbar-delete:hover { background: #ef444420; color: var(--error); }
+.ws-toolbar-sep {
+  width: 1px; align-self: stretch; margin: 2px 4px;
+  background: var(--border);
+}
 
 /* Handles — competitor-style: dots on card border, labels outside */
 .ws-handle-row {

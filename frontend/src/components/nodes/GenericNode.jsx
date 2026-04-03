@@ -3,7 +3,7 @@ import { Handle, Position, NodeToolbar, NodeResizer } from '@xyflow/react';
 import {
   FiUpload, FiType, FiImage, FiFilm, FiEdit3, FiZap, FiMove, FiDownload,
   FiCopy, FiTrash2, FiPlay, FiCheck, FiAlertTriangle, FiFolder,
-  FiRefreshCw,
+  FiRefreshCw, FiMaximize2,
 } from 'react-icons/fi';
 import { useWorkflowStore, apiFetch, toast } from '../../store';
 
@@ -73,11 +73,70 @@ function GenericNode({ id, data, selected }) {
     return properties[p.name] ?? p.default ?? '-';
   };
 
+  // Helper: create a new node to the right and auto-connect from this node's output
+  const spawnConnectedNode = useCallback((targetType, sourceHandle = 'image', targetHandle = 'reference') => {
+    const store = useWorkflowStore.getState();
+    const defs = store.nodeDefinitions;
+    const def = defs.find(d => d.type === targetType) || { type: targetType, displayName: targetType, inputs: [], outputs: [], properties: [] };
+    const defaultProps = {};
+    (def.properties || []).forEach(p => { defaultProps[p.name] = p.default ?? ''; });
+
+    const thisNode = store.nodes.find(n => n.id === id);
+    const newId = `${targetType}_${Date.now()}`;
+    const newNode = {
+      id: newId, type: targetType,
+      position: { x: (thisNode?.position?.x || 0) + 360, y: (thisNode?.position?.y || 0) },
+      data: { nodeType: targetType, definition: def, properties: defaultProps },
+    };
+    store.setNodes([...store.nodes, newNode]);
+
+    // Auto-connect: use first compatible input if targetHandle not found
+    const tgtInput = (def.inputs || []).find(i => i.name === targetHandle)
+      || (def.inputs || []).find(i => i.type === 'file')
+      || (def.inputs || [])[0];
+    if (tgtInput) {
+      const edge = {
+        id: `e-${id}-${newId}-${Date.now()}`,
+        source: id, sourceHandle,
+        target: newId, targetHandle: tgtInput.name,
+        type: 'deletable', animated: true, style: { stroke: '#6366f1' },
+      };
+      store.setEdges([...store.edges, edge]);
+    }
+    toast.info(`Added ${def.displayName || targetType}`);
+  }, [id]);
+
+  // Determine if this node has an image to act on (uploaded or generated)
+  const hasImage = !!(properties.file_url || resultUrl);
+  const imageUrl = properties.file_url || resultUrl;
+
   return (
     <>
-      {/* Toolbar — contextual per node type */}
+      {/* Toolbar — rich contextual actions */}
       <NodeToolbar isVisible={selected} position={Position.Top} offset={10}>
         <div className="ws-node-toolbar">
+          {/* === Image action buttons (when image exists) === */}
+          {hasImage && ['upload', 'image_gen', 'image_edit', 'image_enhance'].includes(nodeType) && (
+            <>
+              <button onClick={() => spawnConnectedNode('image_enhance', nodeType === 'upload' ? 'file' : 'image', 'image')} title="Enhance Image"><FiZap size={13} /></button>
+              <button onClick={() => spawnConnectedNode('image_edit', nodeType === 'upload' ? 'file' : 'image', 'reference')} title="Edit Image"><FiEdit3 size={13} /></button>
+              <button onClick={() => spawnConnectedNode('video_gen', nodeType === 'upload' ? 'file' : 'image', 'reference')} title="Animate / Generate Video"><FiFilm size={13} /></button>
+              <div className="ws-toolbar-sep" />
+            </>
+          )}
+
+          {/* Download / Full View (when image/video) */}
+          {hasImage && (
+            <>
+              <button onClick={() => {
+                const a = document.createElement('a');
+                a.href = imageUrl; a.download = properties.file_name || 'download'; a.click();
+              }} title="Download"><FiDownload size={13} /></button>
+              <button onClick={() => window.open(imageUrl, '_blank')} title="Full View"><FiMaximize2 size={13} /></button>
+              <div className="ws-toolbar-sep" />
+            </>
+          )}
+
           {/* Duplicate — all nodes */}
           <button onClick={() => {
             const orig = useWorkflowStore.getState().nodes.find(n => n.id === id);
@@ -96,11 +155,6 @@ function GenericNode({ id, data, selected }) {
           {/* Upload: re-upload */}
           {nodeType === 'upload' && properties.file_url && (
             <button onClick={() => { updateProp('file_url', ''); updateProp('file_name', ''); }} title="Remove file"><FiRefreshCw size={13} /></button>
-          )}
-
-          {/* Gen/Output nodes: download result */}
-          {['image_gen', 'image_edit', 'image_enhance', 'video_gen', 'video_motion', 'output'].includes(nodeType) && resultUrl && (
-            <button onClick={() => { window.open(resultUrl, '_blank'); }} title="Open result"><FiDownload size={13} /></button>
           )}
 
           {/* Delete — all nodes */}
