@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   addEdge,
   applyNodeChanges,
   applyEdgeChanges,
@@ -460,7 +459,6 @@ export default function WorkflowEditor() {
             onInit={(instance) => { reactFlowInstance.current = instance; }}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
-            fitView
             snapToGrid
             snapGrid={[16, 16]}
             connectionLineStyle={{ stroke: '#6366f1', strokeWidth: 2 }}
@@ -471,10 +469,12 @@ export default function WorkflowEditor() {
             isValidConnection={isValidConnection}
             onPaneContextMenu={onPaneContextMenu}
             onNodeContextMenu={onNodeContextMenu}
+            minZoom={0.1}
+            maxZoom={3}
+            defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           >
             <Background color="#333" gap={16} size={1} variant="dots" />
-            <Controls className="ws-controls" />
-            <MiniMap nodeColor={minimapColor} className="ws-minimap" pannable zoomable />
+            <Controls className="ws-controls" showInteractive={false} />
           </ReactFlow>
 
           <Toolbar />
