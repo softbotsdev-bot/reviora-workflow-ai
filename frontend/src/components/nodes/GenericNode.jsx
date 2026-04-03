@@ -236,10 +236,10 @@ function GenericNode({ id, data, selected }) {
           <div className="ws-node-footer">
             <button
               className={`ws-node-run-btn ${status === 'running' ? 'running' : ''}`}
-              disabled={status === 'running'}
+              disabled={status === 'running' || useWorkflowStore.getState().isRunning}
               onClick={(e) => {
                 e.stopPropagation();
-                toast.info('Use the main Run button to execute the workflow');
+                useWorkflowStore.getState().runWorkflow();
               }}
             >
               {status === 'running' ? (
