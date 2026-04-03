@@ -553,6 +553,12 @@ body {
   font-size: 10px; font-weight: 600;
   white-space: nowrap; pointer-events: none;
   text-transform: capitalize;
+  opacity: 0; transition: opacity 0.15s;
+}
+/* Show labels on node hover or select */
+.ws-node:hover .ws-handle-tag,
+.ws-node.selected .ws-handle-tag {
+  opacity: 1;
 }
 
 
