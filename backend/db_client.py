@@ -14,7 +14,7 @@ def _call(func_name: str, *args, **kwargs):
         raise RuntimeError("DB_API_URL is not configured")
 
     payload = {
-        "function": func_name,
+        "fn": func_name,
         "args": list(args),
         "kwargs": kwargs,
     }
@@ -36,7 +36,7 @@ def _call(func_name: str, *args, **kwargs):
             timeout=30,
         )
         data = resp.json()
-        if data.get("status") == "ok":
+        if data.get("ok"):
             return data.get("result")
         raise RuntimeError(data.get("error", "Unknown DB API error"))
     except requests.RequestException as e:
