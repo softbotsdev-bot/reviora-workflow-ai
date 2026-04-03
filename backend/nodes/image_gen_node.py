@@ -131,7 +131,12 @@ class ImageGenNode(BaseNode):
             raise ValueError(f"Leonardo API error: {err_msg}")
 
         gen_data = resp.json()
-        gen_id = gen_data.get("sdGenerationJob", {}).get("generationId")
+        # V2 API returns {"generate": {"generationId": "..."}}, V1 returns {"sdGenerationJob": {"generationId": "..."}}
+        gen_id = (
+            gen_data.get("generate", {}).get("generationId") or
+            gen_data.get("sdGenerationJob", {}).get("generationId") or
+            gen_data.get("generationId")
+        )
         if not gen_id:
             raise ValueError(f"No generation ID returned: {gen_data}")
 
