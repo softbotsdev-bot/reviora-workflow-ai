@@ -76,14 +76,18 @@ function GenericNode({ id, data, selected }) {
 
       <div className={`ws-node ${selected ? 'selected' : ''} ${status === 'done' ? 'node-done' : ''} ${status === 'error' ? 'node-error' : ''} ${status === 'running' ? 'node-running' : ''}`}>
         {inputs.map((inp, i) => (
-          <Handle
-            key={`in-${inp.name}`}
-            type="target"
-            position={Position.Left}
-            id={inp.name}
-            style={{ top: `${30 + i * 20}%`, background: color }}
-            className="ws-handle"
-          />
+          <div key={`in-${inp.name}`} className="ws-handle-wrapper ws-handle-left" style={{ top: `${30 + i * 20}%` }}>
+            <Handle
+              type="target"
+              position={Position.Left}
+              id={inp.name}
+              style={{ background: color }}
+              className="ws-handle"
+            />
+            <span className="ws-handle-label ws-handle-label-left">
+              {inp.label || inp.name}{inp.required ? '*' : ''}
+            </span>
+          </div>
         ))}
 
         <div className="ws-node-header" style={{ background: `${color}cc` }}>
@@ -228,14 +232,18 @@ function GenericNode({ id, data, selected }) {
         )}
 
         {nodeOutputs.map((out, i) => (
-          <Handle
-            key={`out-${out.name}`}
-            type="source"
-            position={Position.Right}
-            id={out.name}
-            style={{ top: `${30 + i * 20}%`, background: color }}
-            className="ws-handle"
-          />
+          <div key={`out-${out.name}`} className="ws-handle-wrapper ws-handle-right" style={{ top: `${30 + i * 20}%` }}>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id={out.name}
+              style={{ background: color }}
+              className="ws-handle"
+            />
+            <span className="ws-handle-label ws-handle-label-right">
+              {out.label || out.name}
+            </span>
+          </div>
         ))}
       </div>
     </>

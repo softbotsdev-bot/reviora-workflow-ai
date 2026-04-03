@@ -428,15 +428,50 @@ body {
 }
 .ws-node-toolbar button:hover { background: var(--surface); }
 
-/* Handles */
+/* Handles with labels */
+.ws-handle-wrapper {
+  position: absolute; z-index: 5;
+  display: flex; align-items: center;
+}
+.ws-handle-left {
+  left: 0; transform: translate(-50%, -50%);
+  flex-direction: row;
+}
+.ws-handle-right {
+  right: 0; transform: translate(50%, -50%);
+  flex-direction: row-reverse;
+}
 .ws-handle {
   width: 10px !important; height: 10px !important;
   border: 2px solid var(--bg-secondary) !important;
   border-radius: 50% !important;
   transition: all 0.15s !important;
+  position: relative !important;
+  left: auto !important; right: auto !important;
+  top: auto !important;
+  transform: none !important;
+  flex-shrink: 0;
 }
 .ws-handle:hover {
   width: 14px !important; height: 14px !important;
+}
+.ws-handle-label {
+  font-size: 10px; font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 0.2s;
+  text-transform: capitalize;
+}
+.ws-handle-label-left {
+  margin-left: 6px;
+}
+.ws-handle-label-right {
+  margin-right: 6px;
+}
+/* Show labels on node hover or select */
+.ws-node:hover .ws-handle-label,
+.ws-node.selected .ws-handle-label {
+  opacity: 1;
 }
 
 /* ═══════════════════════════════════════════
