@@ -638,6 +638,79 @@ body {
 .ws-toast-info .ws-toast-icon { color: var(--accent); }
 
 /* ═══════════════════════════════════════════
+   KEYBOARD SHORTCUTS MODAL
+   ═══════════════════════════════════════════ */
+.ws-topbar-shortcut-btn {
+  background: none; border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text-muted); cursor: pointer; padding: 4px 8px;
+  font-size: 14px; transition: all 0.15s;
+}
+.ws-topbar-shortcut-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+
+.ws-shortcuts-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+.ws-shortcuts-modal {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); width: 720px; max-width: 92vw;
+  max-height: 85vh; overflow-y: auto; box-shadow: 0 16px 64px rgba(0,0,0,0.6);
+  animation: slideUp 0.25s ease-out;
+}
+.ws-shortcuts-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+}
+.ws-shortcuts-header h2 {
+  font-size: 18px; font-weight: 700; color: var(--text-primary);
+}
+.ws-shortcuts-close {
+  width: 32px; height: 32px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: none; color: var(--text-secondary); cursor: pointer;
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.ws-shortcuts-close:hover { background: var(--surface); color: var(--text-primary); }
+.ws-shortcuts-body {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  padding: 16px 24px 24px;
+}
+.ws-shortcuts-column {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.ws-shortcuts-column:first-child { border-right: 1px solid var(--border); padding-right: 24px; }
+.ws-shortcuts-column:last-child { padding-left: 24px; }
+.ws-shortcut-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; gap: 12px;
+}
+.ws-shortcut-keys {
+  display: flex; align-items: center; gap: 0; flex-shrink: 0;
+}
+.ws-shortcut-key {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 26px; padding: 0 8px;
+  background: var(--bg-tertiary); border: 1px solid var(--border);
+  border-radius: 5px; color: var(--text-primary);
+  font-size: 12px; font-weight: 600; font-family: var(--font);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+.ws-shortcut-plus {
+  color: var(--text-muted); font-size: 11px; margin: 0 4px;
+}
+.ws-shortcut-desc {
+  color: var(--text-secondary); font-size: 13px; white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .ws-shortcuts-body { grid-template-columns: 1fr; }
+  .ws-shortcuts-column:first-child { border-right: none; padding-right: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; }
+  .ws-shortcuts-column:last-child { padding-left: 0; }
+}
+
+/* ═══════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════ */
 @media (max-width: 768px) {
