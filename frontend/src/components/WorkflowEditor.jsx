@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -14,7 +14,7 @@ import GenericNode from './nodes/GenericNode';
 import Sidebar from './Sidebar';
 import PropertiesPanel from './PropertiesPanel';
 import Toolbar from './Toolbar';
-import { useWorkflowStore, useAuthStore } from '../store';
+import { useWorkflowStore, useAuthStore, toast } from '../store';
 import { useEffect } from 'react';
 
 const nodeTypes = {
@@ -28,7 +28,7 @@ const nodeTypes = {
   output: GenericNode,
 };
 
-let nodeIdCounter = 0;
+let nodeIdCounter = Date.now();
 
 export default function WorkflowEditor() {
   const nodes = useWorkflowStore((s) => s.nodes);
@@ -36,22 +36,52 @@ export default function WorkflowEditor() {
   const setNodes = useWorkflowStore((s) => s.setNodes);
   const setEdges = useWorkflowStore((s) => s.setEdges);
   const nodeDefinitions = useWorkflowStore((s) => s.nodeDefinitions);
-  const loadNodeDefs = useWorkflowStore((s) => s.loadNodeDefs);
   const selectedNode = useWorkflowStore((s) => s.selectedNode);
   const setSelectedNode = useWorkflowStore((s) => s.setSelectedNode);
   const currentName = useWorkflowStore((s) => s.currentName);
   const setCurrentName = useWorkflowStore((s) => s.setCurrentName);
   const isRunning = useWorkflowStore((s) => s.isRunning);
   const runResults = useWorkflowStore((s) => s.runResults);
+  const workflows = useWorkflowStore((s) => s.workflows);
+  const currentId = useWorkflowStore((s) => s.currentId);
+  const hasUnsavedChanges = useWorkflowStore((s) => s.hasUnsavedChanges);
+  const isLoading = useWorkflowStore((s) => s.isLoading);
+  const initialize = useWorkflowStore((s) => s.initialize);
+  const loadWorkflow = useWorkflowStore((s) => s.loadWorkflow);
+  const deleteWorkflow = useWorkflowStore((s) => s.deleteWorkflow);
 
   const { user, logout } = useAuthStore();
   const reactFlowWrapper = useRef(null);
   const reactFlowInstance = useRef(null);
+  const [showWfMenu, setShowWfMenu] = useState(false);
 
-  // Load node definitions on mount
-  useEffect(() => { loadNodeDefs(); }, []);
+  // Initialize on mount
+  useEffect(() => { initialize(); }, []);
 
-  // Direct handlers — no bidirectional sync needed
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handler = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasUnsavedChanges]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        useWorkflowStore.getState().saveWorkflow();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const onNodesChange = useCallback(
     (changes) => {
       setNodes(applyNodeChanges(changes, useWorkflowStore.getState().nodes));
@@ -84,6 +114,7 @@ export default function WorkflowEditor() {
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
+    setShowWfMenu(false);
   }, [setSelectedNode]);
 
   const onDragOver = useCallback((event) => {
@@ -101,16 +132,11 @@ export default function WorkflowEditor() {
         x: event.clientX,
         y: event.clientY,
       });
-
       if (!position) return;
 
       const defs = useWorkflowStore.getState().nodeDefinitions;
       const def = defs.find((d) => d.type === type) || {
-        type,
-        displayName: type,
-        inputs: [],
-        outputs: [],
-        properties: [],
+        type, displayName: type, inputs: [], outputs: [], properties: [],
       };
       const defaultProps = {};
       (def.properties || []).forEach((p) => {
@@ -118,22 +144,17 @@ export default function WorkflowEditor() {
       });
 
       const newNode = {
-        id: `${type}_${++nodeIdCounter}_${Date.now().toString(36)}`,
+        id: `${type}_${++nodeIdCounter}`,
         type,
         position,
-        data: {
-          nodeType: type,
-          definition: def,
-          properties: defaultProps,
-        },
+        data: { nodeType: type, definition: def, properties: defaultProps },
       };
-
       setNodes([...useWorkflowStore.getState().nodes, newNode]);
+      toast.info(`Added ${def.displayName || type}`);
     },
     [setNodes]
   );
 
-  // Memoize minimap node color
   const minimapColor = useCallback((node) => {
     const colors = {
       prompt: '#e8a838', upload: '#4a90d9', image_gen: '#7c3aed',
@@ -145,17 +166,62 @@ export default function WorkflowEditor() {
 
   return (
     <div className="ws-editor">
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="ws-loading-overlay">
+          <div className="ws-progress-spinner" style={{ width: 32, height: 32 }} />
+          <span>Loading workflow...</span>
+        </div>
+      )}
+
       {/* Top Bar */}
       <header className="ws-topbar">
         <div className="ws-topbar-left">
           <div className="ws-logo">◈</div>
-          <input
-            className="ws-wf-name"
-            value={currentName}
-            onChange={(e) => setCurrentName(e.target.value)}
-            placeholder="Untitled Workflow"
-          />
+
+          {/* Workflow selector */}
+          <div className="ws-wf-selector" style={{ position: 'relative' }}>
+            <input
+              className="ws-wf-name"
+              value={currentName}
+              onChange={(e) => setCurrentName(e.target.value)}
+              placeholder="Untitled Workflow"
+            />
+            {hasUnsavedChanges && <span className="ws-unsaved-dot" title="Unsaved changes" />}
+            <button
+              className="ws-wf-dropdown-btn"
+              onClick={() => setShowWfMenu(!showWfMenu)}
+              title="Workflows"
+            >▾</button>
+
+            {showWfMenu && (
+              <div className="ws-wf-dropdown">
+                <div className="ws-wf-dropdown-header">
+                  <span>My Workflows</span>
+                  <button onClick={() => { useWorkflowStore.getState().newWorkflow(); setShowWfMenu(false); }}>+ New</button>
+                </div>
+                {workflows.length === 0 && (
+                  <div className="ws-wf-dropdown-empty">No saved workflows</div>
+                )}
+                {workflows.map((wf) => (
+                  <div
+                    key={wf.id}
+                    className={`ws-wf-dropdown-item ${wf.id === currentId ? 'active' : ''}`}
+                    onClick={() => { loadWorkflow(wf.id); setShowWfMenu(false); }}
+                  >
+                    <span>{wf.name || 'Untitled'}</span>
+                    <button
+                      className="ws-wf-delete-btn"
+                      onClick={(e) => { e.stopPropagation(); deleteWorkflow(wf.id); }}
+                      title="Delete"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
+
         <div className="ws-topbar-right">
           <div className="ws-user-info">
             <span>{user?.display_name || user?.email || 'User'}</span>
@@ -165,10 +231,8 @@ export default function WorkflowEditor() {
       </header>
 
       <div className="ws-main">
-        {/* Left Sidebar */}
         <Sidebar />
 
-        {/* Canvas */}
         <div className="ws-canvas-wrapper" ref={reactFlowWrapper}>
           <ReactFlow
             nodes={nodes}
@@ -194,7 +258,6 @@ export default function WorkflowEditor() {
             <MiniMap nodeColor={minimapColor} className="ws-minimap" pannable zoomable />
           </ReactFlow>
 
-          {/* Bottom Toolbar */}
           <Toolbar />
 
           {/* Run Results Overlay */}
@@ -239,7 +302,6 @@ export default function WorkflowEditor() {
           )}
         </div>
 
-        {/* Right Properties Panel */}
         <PropertiesPanel />
       </div>
     </div>

@@ -17,15 +17,37 @@ async function apiFetch(path, options = {}) {
     window.location.reload();
     throw new Error('Session expired');
   }
-  // Handle non-JSON responses (e.g. Flask 500 HTML error pages)
   const contentType = res.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
     const text = await res.text();
-    console.error('Non-JSON response:', res.status, text);
     return { ok: false, error: `Server error (${res.status}): ${text.substring(0, 200)}` };
   }
   return res.json();
 }
+
+// ═══════════════════════════════════════════
+//  TOAST STORE
+// ═══════════════════════════════════════════
+let _toastId = 0;
+export const useToastStore = create((set) => ({
+  toasts: [],
+  addToast: (message, type = 'info', duration = 3500) => {
+    const id = ++_toastId;
+    set((s) => ({ toasts: [...s.toasts, { id, message, type }] }));
+    setTimeout(() => {
+      set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+    }, duration);
+  },
+  removeToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+}));
+
+// Shortcut helpers
+export const toast = {
+  success: (msg) => useToastStore.getState().addToast(msg, 'success'),
+  error: (msg) => useToastStore.getState().addToast(msg, 'error', 5000),
+  info: (msg) => useToastStore.getState().addToast(msg, 'info'),
+  warning: (msg) => useToastStore.getState().addToast(msg, 'warning', 4000),
+};
 
 // ═══════════════════════════════════════════
 //  AUTH STORE
@@ -47,6 +69,7 @@ export const useAuthStore = create((set) => ({
         localStorage.setItem('ws_token', data.token);
         localStorage.setItem('ws_user', JSON.stringify(data.user));
         set({ token: data.token, user: data.user, loading: false });
+        toast.success('Login berhasil!');
         return true;
       }
       set({ error: data.error || 'Login failed', loading: false });
@@ -68,6 +91,7 @@ export const useAuthStore = create((set) => ({
         localStorage.setItem('ws_token', data.token);
         localStorage.setItem('ws_user', JSON.stringify(data.user));
         set({ token: data.token, user: data.user, loading: false });
+        toast.success('Akun berhasil dibuat!');
         return true;
       }
       set({ error: data.error || 'Registration failed', loading: false });
@@ -81,6 +105,7 @@ export const useAuthStore = create((set) => ({
   logout: () => {
     localStorage.removeItem('ws_token');
     localStorage.removeItem('ws_user');
+    localStorage.removeItem('ws_last_wf');
     set({ token: null, user: null });
   },
 
@@ -101,6 +126,9 @@ export const useWorkflowStore = create((set, get) => ({
   isRunning: false,
   runProgress: null,
   runResults: null,
+  isSaving: false,
+  isLoading: false,
+  hasUnsavedChanges: false,
 
   // Load node definitions from server
   loadNodeDefs: async () => {
@@ -112,70 +140,137 @@ export const useWorkflowStore = create((set, get) => ({
     }
   },
 
+  // Initialize: load workflow list + auto-load last workflow
+  initialize: async () => {
+    const { loadNodeDefs, listWorkflows } = get();
+    await loadNodeDefs();
+    await listWorkflows();
+
+    // Auto-load last workflow
+    const lastId = localStorage.getItem('ws_last_wf');
+    const { workflows } = get();
+    if (lastId && workflows.some((w) => w.id === lastId)) {
+      await get().loadWorkflow(lastId);
+    } else if (workflows.length > 0) {
+      await get().loadWorkflow(workflows[0].id);
+    }
+  },
+
   // Workflow CRUD
   listWorkflows: async () => {
-    const data = await apiFetch('/api/workflows');
-    if (data.ok) set({ workflows: data.workflows });
+    try {
+      const data = await apiFetch('/api/workflows');
+      if (data.ok) set({ workflows: data.workflows || [] });
+    } catch (e) {
+      console.error('Failed to list workflows:', e);
+    }
   },
 
   loadWorkflow: async (id) => {
-    const data = await apiFetch(`/api/workflows/${id}`);
-    if (data.ok && data.workflow) {
-      const graph = data.workflow.graph || {};
-      set({
-        currentId: id,
-        currentName: data.workflow.name || 'Untitled',
-        nodes: graph.nodes || [],
-        edges: graph.edges || [],
-      });
+    set({ isLoading: true });
+    try {
+      const data = await apiFetch(`/api/workflows/${id}`);
+      if (data.ok && data.workflow) {
+        const graph = data.workflow.graph || {};
+        set({
+          currentId: id,
+          currentName: data.workflow.name || 'Untitled',
+          nodes: graph.nodes || [],
+          edges: graph.edges || [],
+          selectedNode: null,
+          runResults: null,
+          hasUnsavedChanges: false,
+        });
+        localStorage.setItem('ws_last_wf', id);
+        toast.info(`Loaded: ${data.workflow.name || 'Untitled'}`);
+      }
+    } catch (e) {
+      toast.error('Gagal memuat workflow');
+    } finally {
+      set({ isLoading: false });
     }
   },
 
   saveWorkflow: async () => {
-    const { currentId, currentName, nodes, edges } = get();
+    const { currentId, currentName, nodes, edges, isSaving } = get();
+    if (isSaving) return false;
+
+    set({ isSaving: true });
     const id = currentId || Math.random().toString(36).substr(2, 16);
-    const data = await apiFetch('/api/workflows', {
-      method: 'POST',
-      body: JSON.stringify({
-        id,
-        name: currentName,
-        graph: { nodes, edges },
-      }),
-    });
-    if (data.ok) {
-      set({ currentId: data.id });
+
+    try {
+      const data = await apiFetch('/api/workflows', {
+        method: 'POST',
+        body: JSON.stringify({
+          id,
+          name: currentName,
+          graph: { nodes, edges },
+        }),
+      });
+      if (data.ok) {
+        set({ currentId: data.id, hasUnsavedChanges: false });
+        localStorage.setItem('ws_last_wf', data.id);
+        toast.success('Workflow tersimpan!');
+        // Refresh list
+        get().listWorkflows();
+        return true;
+      }
+      toast.error(data.error || 'Gagal menyimpan');
+      return false;
+    } catch (e) {
+      toast.error('Gagal menyimpan workflow');
+      return false;
+    } finally {
+      set({ isSaving: false });
     }
-    return data.ok;
   },
 
   deleteWorkflow: async (id) => {
-    await apiFetch(`/api/workflows/${id}`, { method: 'DELETE' });
-    const { workflows, currentId } = get();
-    set({ workflows: workflows.filter(w => w.id !== id) });
-    if (currentId === id) {
-      set({ currentId: null, currentName: 'Untitled Workflow', nodes: [], edges: [] });
+    try {
+      await apiFetch(`/api/workflows/${id}`, { method: 'DELETE' });
+      const { workflows, currentId } = get();
+      set({ workflows: workflows.filter((w) => w.id !== id) });
+      if (currentId === id) {
+        set({ currentId: null, currentName: 'Untitled Workflow', nodes: [], edges: [], hasUnsavedChanges: false });
+        localStorage.removeItem('ws_last_wf');
+      }
+      toast.info('Workflow dihapus');
+    } catch (e) {
+      toast.error('Gagal menghapus workflow');
     }
   },
 
-  // Canvas state
-  setNodes: (nodes) => set({ nodes }),
-  setEdges: (edges) => set({ edges }),
-  setCurrentName: (name) => set({ currentName: name }),
-  setSelectedNode: (node) => set({ selectedNode: node }),
+  // Canvas state — mark unsaved
+  setNodes: (nodes) => set({ nodes, hasUnsavedChanges: true }),
+  setEdges: (edges) => set({ edges, hasUnsavedChanges: true }),
+  setCurrentName: (name) => set({ currentName: name, hasUnsavedChanges: true }),
+  setSelectedNode: (nodeId) => set({ selectedNode: nodeId }),
 
-  newWorkflow: () => set({
-    currentId: null,
-    currentName: 'Untitled Workflow',
-    nodes: [],
-    edges: [],
-    selectedNode: null,
-    runResults: null,
-  }),
+  newWorkflow: () => {
+    set({
+      currentId: null,
+      currentName: 'Untitled Workflow',
+      nodes: [],
+      edges: [],
+      selectedNode: null,
+      runResults: null,
+      hasUnsavedChanges: false,
+    });
+    localStorage.removeItem('ws_last_wf');
+    toast.info('New workflow created');
+  },
 
   // Execution
   runWorkflow: async () => {
-    const { nodes, edges } = get();
+    const { nodes, edges, isRunning } = get();
+    if (isRunning) return;
+    if (nodes.length === 0) {
+      toast.warning('Canvas kosong — tambahkan node dulu');
+      return;
+    }
+
     set({ isRunning: true, runProgress: null, runResults: null });
+    toast.info('Menjalankan workflow...');
 
     try {
       const data = await apiFetch('/api/workflows/run', {
@@ -185,6 +280,7 @@ export const useWorkflowStore = create((set, get) => ({
 
       if (!data.ok) {
         set({ isRunning: false, runResults: { status: 'failed', errors: { _: data.error } } });
+        toast.error(data.error || 'Workflow gagal');
         return;
       }
 
@@ -203,7 +299,7 @@ export const useWorkflowStore = create((set, get) => ({
         const d = JSON.parse(e.data);
         set((s) => ({
           runProgress: { ...d, stage: 'done' },
-          nodes: s.nodes.map(n =>
+          nodes: s.nodes.map((n) =>
             n.id === d.node_id ? { ...n, data: { ...n.data, _status: 'done', _outputs: d.outputs } } : n
           ),
         }));
@@ -213,24 +309,32 @@ export const useWorkflowStore = create((set, get) => ({
         const d = JSON.parse(e.data);
         set((s) => ({
           runProgress: { ...d, stage: 'error' },
-          nodes: s.nodes.map(n =>
+          nodes: s.nodes.map((n) =>
             n.id === d.node_id ? { ...n, data: { ...n.data, _status: 'error', _error: d.error } } : n
           ),
         }));
+        toast.error(`Node error: ${d.error}`);
       });
 
       evtSource.addEventListener('workflow_done', (e) => {
         const result = JSON.parse(e.data);
-        set({ isRunning: false, runResults: result });
+        set({ isRunning: false, runResults: result, runProgress: null });
         evtSource.close();
+        if (result.status === 'completed') {
+          toast.success('Workflow selesai!');
+        } else {
+          toast.warning('Workflow selesai dengan error');
+        }
       });
 
       evtSource.onerror = () => {
-        set({ isRunning: false });
+        set({ isRunning: false, runProgress: null });
         evtSource.close();
+        toast.error('Koneksi SSE terputus');
       };
     } catch (e) {
       set({ isRunning: false, runResults: { status: 'failed', errors: { _: e.message } } });
+      toast.error(e.message);
     }
   },
 }));
