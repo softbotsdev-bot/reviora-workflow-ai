@@ -23,8 +23,14 @@ def _call(func_name: str, *args, **kwargs):
         "Content-Type": "application/json",
     }
     try:
+        # DB_API_URL should be the full endpoint, e.g. https://x.pythonanywhere.com/api/call
+        url = DB_API_URL.rstrip('/')
+        # Don't append /api/call if it's already in the URL
+        if not url.endswith('/api/call'):
+            url = f"{url}/api/call"
+
         resp = _session.post(
-            f"{DB_API_URL.rstrip('/')}/api/call",
+            url,
             json=payload,
             headers=headers,
             timeout=30,
@@ -35,6 +41,8 @@ def _call(func_name: str, *args, **kwargs):
         raise RuntimeError(data.get("error", "Unknown DB API error"))
     except requests.RequestException as e:
         raise RuntimeError(f"DB API connection error: {e}")
+    except ValueError as e:
+        raise RuntimeError(f"DB API invalid response: {e}")
 
 
 # ── User / Auth ─────────────────────────────────────
