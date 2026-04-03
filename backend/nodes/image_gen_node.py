@@ -190,23 +190,35 @@ class ImageGenNode(BaseNode):
         raise ValueError("Image generation timed out")
 
     def _upload_ref_to_leonardo(self, image_url, headers):
-        """Download image from URL and upload to Leonardo to get a reference image ID.
+        """Download image from URL (or decode base64 data URL) and upload to Leonardo.
         NOTE: Everything is in-memory — no temp files are written to disk."""
         import json as json_mod
+        import base64
 
         try:
-            # 1. Download the image
-            dl_resp = requests.get(image_url, timeout=30)
-            if dl_resp.status_code != 200:
-                print(f"[RefImage] Failed to download: {dl_resp.status_code}")
-                return None
-
-            content_type = dl_resp.headers.get("content-type", "image/jpeg")
-            ext = "jpg"
-            if "png" in content_type:
-                ext = "png"
-            elif "webp" in content_type:
-                ext = "webp"
+            # 1. Get image bytes — handle base64 data URLs or regular URLs
+            if image_url.startswith("data:"):
+                # Parse data URL: data:image/png;base64,XXXXX
+                header, b64data = image_url.split(",", 1)
+                image_bytes = base64.b64decode(b64data)
+                # Extract extension from MIME
+                mime_part = header.split(":")[1].split(";")[0]  # e.g. image/png
+                ext_map = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+                ext = ext_map.get(mime_part, "jpg")
+                print(f"[RefImage] Decoded base64 data URL, {len(image_bytes)} bytes, ext={ext}")
+            else:
+                # Download from regular URL
+                dl_resp = requests.get(image_url, timeout=30)
+                if dl_resp.status_code != 200:
+                    print(f"[RefImage] Failed to download: {dl_resp.status_code}")
+                    return None
+                image_bytes = dl_resp.content
+                content_type = dl_resp.headers.get("content-type", "image/jpeg")
+                ext = "jpg"
+                if "png" in content_type:
+                    ext = "png"
+                elif "webp" in content_type:
+                    ext = "webp"
 
             # 2. Init upload on Leonardo
             init_resp = requests.post(
@@ -230,7 +242,7 @@ class ImageGenNode(BaseNode):
 
             # 3. Upload to Leonardo's S3 storage
             mime = f"image/{ext}" if ext != "jpg" else "image/jpeg"
-            files_payload = {"file": (f"ref.{ext}", dl_resp.content, mime)}
+            files_payload = {"file": (f"ref.{ext}", image_bytes, mime)}
             upload_resp = requests.post(upload_url, data=fields, files=files_payload, timeout=30)
             if upload_resp.status_code not in [200, 204]:
                 print(f"[RefImage] S3 upload failed: {upload_resp.status_code}")

@@ -191,15 +191,34 @@ def api_upload():
     if ext not in allowed:
         return jsonify(ok=False, error=f"File type {ext} not allowed"), 400
 
+    import base64
+
+    # Read file into memory
+    file_bytes = f.read()
+
+    # MIME type mapping
+    mime_map = {
+        ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+        ".webp": "image/webp", ".gif": "image/gif",
+        ".mp4": "video/mp4", ".mov": "video/quicktime",
+        ".avi": "video/x-msvideo", ".webm": "video/webm",
+    }
+    mime = mime_map.get(ext, "application/octet-stream")
+
+    # Convert to base64 data URL — survives Railway redeploys
+    b64 = base64.b64encode(file_bytes).decode("ascii")
+    data_url = f"data:{mime};base64,{b64}"
+
+    # Also save to filesystem as cache (for current container lifetime)
     unique_name = f"{uuid.uuid4().hex[:12]}{ext}"
     save_path = os.path.join(config.UPLOAD_DIR, unique_name)
-    f.save(save_path)
+    try:
+        with open(save_path, "wb") as fp:
+            fp.write(file_bytes)
+    except Exception:
+        pass  # Non-critical, data URL is primary
 
-    # Public URL — served by this same Flask app
-    base_url = request.host_url.rstrip("/")
-    file_url = f"{base_url}/api/files/{unique_name}"
-
-    return jsonify(ok=True, url=file_url, filename=unique_name)
+    return jsonify(ok=True, url=data_url, filename=unique_name)
 
 
 @app.route("/api/files/<filename>")
