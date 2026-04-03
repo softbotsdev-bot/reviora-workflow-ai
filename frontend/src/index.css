@@ -428,7 +428,7 @@ body {
   background: var(--bg-tertiary);
 }
 .ws-upload-img {
-  width: 100%; max-height: 280px; object-fit: cover; display: block;
+  width: 100%; display: block; border-radius: 8px;
 }
 .ws-upload-remove {
   position: absolute; top: 8px; right: 8px;
