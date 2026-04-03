@@ -17,6 +17,8 @@ import '@xyflow/react/dist/style.css';
 import {
   FiCommand, FiChevronDown, FiX, FiDownload,
   FiCheckCircle, FiAlertTriangle, FiXCircle,
+  FiImage, FiType, FiUpload, FiFilm, FiTrash2, FiCopy,
+  FiEdit3, FiZap, FiMove, FiScissors,
 } from 'react-icons/fi';
 
 import GenericNode from './nodes/GenericNode';
@@ -118,6 +120,7 @@ export default function WorkflowEditor() {
   const [showWfMenu, setShowWfMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [uiMinimized, setUiMinimized] = useState(false);
+  const [ctxMenu, setCtxMenu] = useState(null); // {x, y, nodeId?}
 
   // Initialize on mount
   useEffect(() => { initialize(); }, []);
@@ -295,7 +298,54 @@ export default function WorkflowEditor() {
     [setEdges]
   );
   const onNodeClick = useCallback((_, node) => setSelectedNode(node.id), [setSelectedNode]);
-  const onPaneClick = useCallback(() => { setSelectedNode(null); setShowWfMenu(false); }, [setSelectedNode]);
+  const onPaneClick = useCallback(() => { setSelectedNode(null); setShowWfMenu(false); setCtxMenu(null); }, [setSelectedNode]);
+
+  // Custom right-click context menu
+  const onPaneContextMenu = useCallback((event) => {
+    event.preventDefault();
+    const position = reactFlowInstance.current?.screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    setCtxMenu({ x: event.clientX, y: event.clientY, flowPos: position, nodeId: null });
+  }, []);
+  const onNodeContextMenu = useCallback((event, node) => {
+    event.preventDefault();
+    setCtxMenu({ x: event.clientX, y: event.clientY, nodeId: node.id });
+  }, []);
+  const ctxAddNode = useCallback((type) => {
+    if (ctxMenu?.flowPos) {
+      const defs = useWorkflowStore.getState().nodeDefinitions;
+      const def = defs.find((d) => d.type === type) || { type, displayName: type, inputs: [], outputs: [], properties: [] };
+      const defaultProps = {};
+      (def.properties || []).forEach((p) => { defaultProps[p.name] = p.default ?? ''; });
+      const newNode = {
+        id: `${type}_${Date.now()}`,
+        type,
+        position: ctxMenu.flowPos,
+        data: { nodeType: type, definition: def, properties: defaultProps },
+      };
+      setNodes([...useWorkflowStore.getState().nodes, newNode]);
+      toast.info(`Added ${def.displayName || type}`);
+    }
+    setCtxMenu(null);
+  }, [ctxMenu, setNodes]);
+  const ctxDeleteNode = useCallback(() => {
+    if (ctxMenu?.nodeId) {
+      setNodes(useWorkflowStore.getState().nodes.filter(n => n.id !== ctxMenu.nodeId));
+      setEdges(useWorkflowStore.getState().edges.filter(e => e.source !== ctxMenu.nodeId && e.target !== ctxMenu.nodeId));
+      setSelectedNode(null);
+    }
+    setCtxMenu(null);
+  }, [ctxMenu, setNodes, setEdges, setSelectedNode]);
+  const ctxDuplicateNode = useCallback(() => {
+    if (ctxMenu?.nodeId) {
+      const orig = useWorkflowStore.getState().nodes.find(n => n.id === ctxMenu.nodeId);
+      if (orig) {
+        const dup = { ...orig, id: `${orig.type}_${Date.now()}`, position: { x: orig.position.x + 40, y: orig.position.y + 40 }, data: { ...orig.data, _status: undefined, _outputs: undefined, _error: undefined } };
+        setNodes([...useWorkflowStore.getState().nodes, dup]);
+        toast.info('Node duplicated');
+      }
+    }
+    setCtxMenu(null);
+  }, [ctxMenu, setNodes]);
 
   const onDragOver = useCallback((event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; }, []);
 
@@ -419,6 +469,8 @@ export default function WorkflowEditor() {
             edgesReconnectable
             deleteKeyCode={['Delete', 'Backspace']}
             isValidConnection={isValidConnection}
+            onPaneContextMenu={onPaneContextMenu}
+            onNodeContextMenu={onNodeContextMenu}
           >
             <Background color="#333" gap={16} size={1} variant="dots" />
             <Controls className="ws-controls" />
@@ -426,6 +478,38 @@ export default function WorkflowEditor() {
           </ReactFlow>
 
           <Toolbar />
+
+          {/* Custom Context Menu */}
+          {ctxMenu && (
+            <div className="ws-ctx-overlay" onClick={() => setCtxMenu(null)} onContextMenu={(e) => { e.preventDefault(); setCtxMenu(null); }}>
+              <div className="ws-ctx-menu" style={{ left: ctxMenu.x, top: ctxMenu.y }} onClick={(e) => e.stopPropagation()}>
+                {ctxMenu.nodeId ? (
+                  <>
+                    <div className="ws-ctx-header">Node</div>
+                    <button onClick={ctxDuplicateNode}><FiCopy size={13} /> Duplicate</button>
+                    <button onClick={() => { setSelectedNode(ctxMenu.nodeId); setCtxMenu(null); }}><FiEdit3 size={13} /> Properties</button>
+                    <div className="ws-ctx-sep" />
+                    <button className="ws-ctx-danger" onClick={ctxDeleteNode}><FiTrash2 size={13} /> Delete</button>
+                  </>
+                ) : (
+                  <>
+                    <div className="ws-ctx-header">Add Node</div>
+                    <button onClick={() => ctxAddNode('prompt')}><FiType size={13} /> Prompt</button>
+                    <button onClick={() => ctxAddNode('upload')}><FiUpload size={13} /> Upload</button>
+                    <div className="ws-ctx-sep" />
+                    <button onClick={() => ctxAddNode('image_gen')}><FiImage size={13} /> Generate Image</button>
+                    <button onClick={() => ctxAddNode('image_edit')}><FiEdit3 size={13} /> Edit Image</button>
+                    <button onClick={() => ctxAddNode('image_enhance')}><FiZap size={13} /> Enhance Image</button>
+                    <div className="ws-ctx-sep" />
+                    <button onClick={() => ctxAddNode('video_gen')}><FiFilm size={13} /> Generate Video</button>
+                    <button onClick={() => ctxAddNode('video_motion')}><FiMove size={13} /> Video Motion</button>
+                    <div className="ws-ctx-sep" />
+                    <button onClick={() => ctxAddNode('output')}><FiDownload size={13} /> Output</button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Run Results Overlay */}
           {runResults && (

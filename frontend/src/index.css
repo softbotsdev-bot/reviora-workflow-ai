@@ -506,6 +506,37 @@ body {
   margin-right: 6px; color: #818cf8;
 }
 
+/* Custom Context Menu */
+.ws-ctx-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+}
+.ws-ctx-menu {
+  position: fixed; z-index: 1001;
+  min-width: 180px; padding: 6px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+  backdrop-filter: blur(16px);
+  animation: ctxFadeIn 0.12s ease-out;
+}
+@keyframes ctxFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.ws-ctx-header {
+  padding: 4px 10px 6px; font-size: 10px; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+}
+.ws-ctx-menu button {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 7px 10px; border: none; border-radius: 6px;
+  background: none; color: var(--text-secondary); cursor: pointer;
+  font-size: 12px; font-family: var(--font); text-align: left;
+  transition: all 0.1s;
+}
+.ws-ctx-menu button:hover { background: var(--surface); color: var(--text-primary); }
+.ws-ctx-menu button.ws-ctx-danger:hover { background: #ef444420; color: var(--error); }
+.ws-ctx-sep { height: 1px; background: var(--border); margin: 4px 6px; }
+
 /* Edge delete button */
 .ws-edge-delete {
   position: absolute; pointer-events: all;
