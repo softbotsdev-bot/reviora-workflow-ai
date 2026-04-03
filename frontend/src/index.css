@@ -1057,3 +1057,39 @@ body {
   .ws-wf-name { width: 120px; }
   .ws-toast-container { right: 8px; left: 8px; max-width: none; }
 }
+
+/* ═══════════════════════════════════════════
+   LIGHTBOX MODAL
+   ═══════════════════════════════════════════ */
+.ws-lightbox-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.15s ease;
+  cursor: zoom-out;
+}
+.ws-lightbox-content {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  max-width: 90vw; max-height: 90vh;
+  cursor: default;
+}
+.ws-lightbox-img {
+  max-width: 90vw; max-height: 80vh;
+  border-radius: 12px; object-fit: contain;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.ws-lightbox-actions {
+  display: flex; gap: 10px;
+}
+.ws-lightbox-actions button {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 20px; border: none; border-radius: 8px;
+  background: var(--bg-elevated); color: var(--text-primary);
+  font-size: 13px; font-weight: 500; font-family: var(--font);
+  cursor: pointer; transition: all 0.15s;
+  border: 1px solid var(--border);
+}
+.ws-lightbox-actions button:hover {
+  background: var(--surface); transform: translateY(-1px);
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

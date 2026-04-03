@@ -1,9 +1,10 @@
-import { memo, useCallback, useRef } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Handle, Position, NodeToolbar, NodeResizer } from '@xyflow/react';
 import {
   FiUpload, FiType, FiImage, FiFilm, FiEdit3, FiZap, FiMove, FiDownload,
   FiCopy, FiTrash2, FiPlay, FiCheck, FiAlertTriangle, FiFolder,
-  FiRefreshCw, FiMaximize2,
+  FiRefreshCw, FiMaximize2, FiX,
 } from 'react-icons/fi';
 import { useWorkflowStore, apiFetch, toast } from '../../store';
 
@@ -28,6 +29,7 @@ function GenericNode({ id, data, selected }) {
   const nodeType = data?.nodeType || 'unknown';
   const def = data?.definition || {};
   const properties = data?.properties || {};
+  const [lightbox, setLightbox] = useState(false);
   const status = data?._status;
   const outputs = data?._outputs;
   const error = data?._error;
@@ -132,7 +134,7 @@ function GenericNode({ id, data, selected }) {
                 const a = document.createElement('a');
                 a.href = imageUrl; a.download = properties.file_name || 'download'; a.click();
               }} title="Download"><FiDownload size={13} /></button>
-              <button onClick={() => window.open(imageUrl, '_blank')} title="Full View"><FiMaximize2 size={13} /></button>
+              <button onClick={() => setLightbox(true)} title="Full View"><FiMaximize2 size={13} /></button>
               <div className="ws-toolbar-sep" />
             </>
           )}
@@ -360,6 +362,23 @@ function GenericNode({ id, data, selected }) {
           </div>
         );})}
       </div>
+
+      {/* Lightbox Modal */}
+      {lightbox && imageUrl && createPortal(
+        <div className="ws-lightbox-overlay" onClick={() => setLightbox(false)}>
+          <div className="ws-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <img src={imageUrl} alt="Full view" className="ws-lightbox-img" />
+            <div className="ws-lightbox-actions">
+              <button onClick={() => {
+                const a = document.createElement('a');
+                a.href = imageUrl; a.download = properties.file_name || 'download'; a.click();
+              }}><FiDownload size={16} /> Download</button>
+              <button onClick={() => setLightbox(false)}><FiX size={16} /> Close</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
