@@ -103,20 +103,18 @@ function GenericNode({ id, data, selected }) {
             <div className="ws-node-prompt-area">
               <textarea
                 className="ws-node-inline-textarea"
-                value={properties.prompt || ''}
-                onChange={(e) => updateProp('prompt', e.target.value)}
+                value={properties.text || properties.prompt || ''}
+                onChange={(e) => updateProp('text', e.target.value)}
                 placeholder="Enter your prompt here..."
                 rows={3}
               />
-              {properties.negative_prompt !== undefined && (
-                <textarea
-                  className="ws-node-inline-textarea ws-neg"
-                  value={properties.negative_prompt || ''}
-                  onChange={(e) => updateProp('negative_prompt', e.target.value)}
-                  placeholder="Negative prompt (optional)..."
-                  rows={2}
-                />
-              )}
+              <textarea
+                className="ws-node-inline-textarea ws-neg"
+                value={properties.negative_prompt || ''}
+                onChange={(e) => updateProp('negative_prompt', e.target.value)}
+                placeholder="Negative prompt (optional)..."
+                rows={2}
+              />
             </div>
           )}
 
