@@ -591,6 +591,12 @@ body {
   font-size: 12px; color: var(--error); padding: 8px;
   background: #ef444420; border-radius: 4px; margin-bottom: 4px;
 }
+.ws-results-title {
+  display: flex; align-items: center; gap: 8px; font-size: 18px; margin-bottom: 8px;
+}
+.ws-icon-success { color: var(--success); }
+.ws-icon-warning { color: var(--warning); }
+.ws-icon-error { color: var(--error); }
 .ws-close-results {
   margin-top: 16px; width: 100%; padding: 10px;
   border: 1px solid var(--border); border-radius: var(--radius);

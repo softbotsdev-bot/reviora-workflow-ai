@@ -9,6 +9,10 @@ import {
   applyEdgeChanges,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import {
+  FiCommand, FiChevronDown, FiX, FiDownload,
+  FiCheckCircle, FiAlertTriangle, FiXCircle,
+} from 'react-icons/fi';
 
 import GenericNode from './nodes/GenericNode';
 import Sidebar from './Sidebar';
@@ -263,7 +267,7 @@ export default function WorkflowEditor() {
       {/* Top Bar */}
       <header className="ws-topbar">
         <div className="ws-topbar-left">
-          <div className="ws-logo">◈</div>
+          <div className="ws-logo"><FiCommand size={20} /></div>
           <div className="ws-wf-selector" style={{ position: 'relative' }}>
             <input
               className="ws-wf-name"
@@ -272,7 +276,9 @@ export default function WorkflowEditor() {
               placeholder="Untitled Workflow"
             />
             {hasUnsavedChanges && <span className="ws-unsaved-dot" title="Unsaved changes" />}
-            <button className="ws-wf-dropdown-btn" onClick={() => setShowWfMenu(!showWfMenu)} title="Workflows">▾</button>
+            <button className="ws-wf-dropdown-btn" onClick={() => setShowWfMenu(!showWfMenu)} title="Workflows">
+              <FiChevronDown size={14} />
+            </button>
 
             {showWfMenu && (
               <div className="ws-wf-dropdown">
@@ -288,7 +294,7 @@ export default function WorkflowEditor() {
                     onClick={() => { loadWorkflow(wf.id); setShowWfMenu(false); }}
                   >
                     <span>{wf.name || 'Untitled'}</span>
-                    <button className="ws-wf-delete-btn" onClick={(e) => { e.stopPropagation(); deleteWorkflow(wf.id); }} title="Delete">×</button>
+                    <button className="ws-wf-delete-btn" onClick={(e) => { e.stopPropagation(); deleteWorkflow(wf.id); }} title="Delete"><FiX size={14} /></button>
                   </div>
                 ))}
               </div>
@@ -301,7 +307,7 @@ export default function WorkflowEditor() {
             className="ws-topbar-shortcut-btn"
             onClick={() => setShowShortcuts(true)}
             title="Keyboard Shortcuts (?)"
-          >⌨</button>
+          ><FiCommand size={14} /></button>
           <div className="ws-user-info">
             <span>{user?.display_name || user?.email || 'User'}</span>
             <button className="ws-logout-btn" onClick={logout}>Logout</button>
@@ -343,9 +349,12 @@ export default function WorkflowEditor() {
           {runResults && (
             <div className="ws-results-overlay">
               <div className="ws-results-card">
-                <h3>
-                  {runResults.status === 'completed' ? '✅ Workflow Complete' :
-                   runResults.status === 'partial' ? '⚠️ Partial Results' : '❌ Workflow Failed'}
+                <h3 className="ws-results-title">
+                  {runResults.status === 'completed' && <FiCheckCircle size={20} className="ws-icon-success" />}
+                  {runResults.status === 'partial' && <FiAlertTriangle size={20} className="ws-icon-warning" />}
+                  {runResults.status !== 'completed' && runResults.status !== 'partial' && <FiXCircle size={20} className="ws-icon-error" />}
+                  {runResults.status === 'completed' ? ' Workflow Complete' :
+                   runResults.status === 'partial' ? ' Partial Results' : ' Workflow Failed'}
                 </h3>
                 {runResults.elapsed && <p className="ws-results-time">Elapsed: {runResults.elapsed}s</p>}
 
@@ -357,7 +366,7 @@ export default function WorkflowEditor() {
                         ? <video src={r.data.url} controls className="ws-result-media" />
                         : <img src={r.data.url} alt={r.label} className="ws-result-media" />
                     )}
-                    {r.data?.url && <a href={r.data.url} download className="ws-download-btn">⬇ Download</a>}
+                    {r.data?.url && <a href={r.data.url} download className="ws-download-btn"><FiDownload size={14} /> Download</a>}
                   </div>
                 ))}
 

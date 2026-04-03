@@ -1,11 +1,15 @@
 import { memo, useCallback, useRef } from 'react';
 import { Handle, Position, NodeToolbar } from '@xyflow/react';
+import {
+  FiUpload, FiType, FiImage, FiFilm, FiEdit3, FiZap, FiMove, FiDownload,
+  FiCopy, FiTrash2, FiPlay, FiCheck, FiAlertTriangle, FiFolder
+} from 'react-icons/fi';
 import { useWorkflowStore, apiFetch, toast } from '../../store';
 
-// Icon map per node type
-const NODE_ICONS = {
-  upload: '📁', prompt: '✏️', image_gen: '🖼️', image_edit: '✂️',
-  image_enhance: '✨', video_gen: '🎬', video_motion: '🎞️', output: '📤',
+// Icon components per node type
+const NODE_ICON_MAP = {
+  upload: FiUpload, prompt: FiType, image_gen: FiImage, image_edit: FiEdit3,
+  image_enhance: FiZap, video_gen: FiFilm, video_motion: FiMove, output: FiDownload,
 };
 
 const NODE_COLORS = {
@@ -20,7 +24,7 @@ function GenericNode({ id, data, selected }) {
   const status = data?._status;
   const outputs = data?._outputs;
   const error = data?._error;
-  const icon = NODE_ICONS[nodeType] || '⬡';
+  const IconComponent = NODE_ICON_MAP[nodeType] || FiImage;
   const color = NODE_COLORS[nodeType] || '#666';
   const displayName = def.displayName || nodeType;
   const fileRef = useRef(null);
@@ -48,30 +52,29 @@ function GenericNode({ id, data, selected }) {
     }
   }, [updateProp]);
 
-  // Determine inputs/outputs from definition
   const inputs = def.inputs || [];
   const nodeOutputs = def.outputs || [];
-
-  // Get result image/video URL
   const resultUrl = outputs?.image?.url || outputs?.video?.url || null;
   const resultType = outputs?.video?.url ? 'video' : 'image';
 
   return (
     <>
-      {/* Node Toolbar — appears above node on hover/select */}
       <NodeToolbar isVisible={selected} position={Position.Top} offset={8}>
         <div className="ws-node-toolbar">
-          <button onClick={() => navigator.clipboard.writeText(id)} title="Copy ID">📋</button>
+          <button onClick={() => navigator.clipboard.writeText(id)} title="Copy ID">
+            <FiCopy size={14} />
+          </button>
           <button onClick={() => {
             const nodes = useWorkflowStore.getState().nodes;
             useWorkflowStore.getState().setNodes(nodes.filter((n) => n.id !== id));
             useWorkflowStore.getState().setSelectedNode(null);
-          }} title="Delete">🗑️</button>
+          }} title="Delete">
+            <FiTrash2 size={14} />
+          </button>
         </div>
       </NodeToolbar>
 
       <div className={`ws-node ${selected ? 'selected' : ''} ${status === 'done' ? 'node-done' : ''} ${status === 'error' ? 'node-error' : ''} ${status === 'running' ? 'node-running' : ''}`}>
-        {/* Input handles */}
         {inputs.map((inp, i) => (
           <Handle
             key={`in-${inp.name}`}
@@ -83,18 +86,15 @@ function GenericNode({ id, data, selected }) {
           />
         ))}
 
-        {/* Header */}
         <div className="ws-node-header" style={{ background: `${color}cc` }}>
-          <span className="ws-node-icon">{icon}</span>
+          <IconComponent size={14} />
           <span className="ws-node-title">{displayName}</span>
           {status === 'running' && <div className="node-spinner" />}
-          {status === 'done' && <span className="ws-node-check">✓</span>}
+          {status === 'done' && <FiCheck size={14} className="ws-node-check" />}
         </div>
 
-        {/* Body — type-specific content */}
         <div className="ws-node-body">
-
-          {/* ─── PROMPT NODE: inline textarea ─── */}
+          {/* PROMPT NODE */}
           {nodeType === 'prompt' && (
             <div className="ws-node-prompt-area">
               <textarea
@@ -116,13 +116,15 @@ function GenericNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* ─── UPLOAD NODE: drop zone ─── */}
+          {/* UPLOAD NODE */}
           {nodeType === 'upload' && (
             <div className="ws-node-upload-zone">
               {properties.file_url ? (
                 <div className="ws-node-upload-preview">
                   <img src={properties.file_url} alt="uploaded" />
-                  <button className="ws-node-upload-clear" onClick={() => updateProp('file_url', '')}>×</button>
+                  <button className="ws-node-upload-clear" onClick={() => updateProp('file_url', '')}>
+                    <FiTrash2 size={12} />
+                  </button>
                 </div>
               ) : (
                 <label className="ws-node-upload-drop"
@@ -137,7 +139,7 @@ function GenericNode({ id, data, selected }) {
                     onChange={(e) => { if (e.target.files[0]) handleUpload(e.target.files[0]); }}
                   />
                   <div className="ws-upload-placeholder">
-                    <span className="ws-upload-icon">📁</span>
+                    <FiFolder size={24} />
                     <span>Drop file or click</span>
                   </div>
                 </label>
@@ -145,7 +147,7 @@ function GenericNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* ─── IMAGE/VIDEO GEN NODES: preview area ─── */}
+          {/* IMAGE/VIDEO GEN NODES */}
           {['image_gen', 'image_edit', 'image_enhance', 'video_gen', 'video_motion'].includes(nodeType) && (
             <div className="ws-node-preview-area">
               {resultUrl ? (
@@ -162,7 +164,7 @@ function GenericNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* ─── OUTPUT NODE ─── */}
+          {/* OUTPUT NODE */}
           {nodeType === 'output' && (
             <div className="ws-node-preview-area">
               {resultUrl ? (
@@ -172,7 +174,9 @@ function GenericNode({ id, data, selected }) {
                   ) : (
                     <img src={resultUrl} alt="output" className="ws-node-preview-media" />
                   )}
-                  <a href={resultUrl} download className="ws-node-download-btn">⬇ Download</a>
+                  <a href={resultUrl} download className="ws-node-download-btn">
+                    <FiDownload size={12} /> Download
+                  </a>
                 </div>
               ) : (
                 <div className="ws-node-preview-empty output-empty">
@@ -182,7 +186,7 @@ function GenericNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* ── Properties summary (non-prompt) ── */}
+          {/* Properties summary */}
           {nodeType !== 'prompt' && nodeType !== 'upload' && (
             <div className="ws-node-props-summary">
               {(def.properties || []).slice(0, 3).map((p) => (
@@ -198,13 +202,12 @@ function GenericNode({ id, data, selected }) {
             </div>
           )}
 
-          {/* Error display */}
           {error && (
-            <div className="ws-node-error">⚠ {error}</div>
+            <div className="ws-node-error"><FiAlertTriangle size={12} /> {error}</div>
           )}
         </div>
 
-        {/* ── Footer with Run button (for gen nodes) ── */}
+        {/* Footer with Run button */}
         {['image_gen', 'image_edit', 'image_enhance', 'video_gen', 'video_motion', 'output'].includes(nodeType) && (
           <div className="ws-node-footer">
             <button
@@ -218,13 +221,12 @@ function GenericNode({ id, data, selected }) {
               {status === 'running' ? (
                 <><div className="node-spinner" /> Running...</>
               ) : (
-                <>▶ Run</>
+                <><FiPlay size={12} /> Run</>
               )}
             </button>
           </div>
         )}
 
-        {/* Output handles */}
         {nodeOutputs.map((out, i) => (
           <Handle
             key={`out-${out.name}`}
