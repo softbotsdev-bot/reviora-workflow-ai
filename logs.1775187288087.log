@@ -1,0 +1,67 @@
+2026-04-03T03:32:09.900422157Z [inf]  
+2026-04-03T03:32:10.559853783Z [inf]  [35m[Region: us-west1][0m
+2026-04-03T03:32:10.562784749Z [inf]  [35m=========================
+2026-04-03T03:32:10.562806034Z [inf]  Using Detected Dockerfile
+2026-04-03T03:32:10.562809528Z [inf]  =========================
+2026-04-03T03:32:10.562813185Z [inf]  [0m
+2026-04-03T03:32:10.562824312Z [inf]  context: 84wd-8eMr
+2026-04-03T03:32:10.720924145Z [inf]  [internal] load build definition from Dockerfile
+2026-04-03T03:32:10.720978773Z [inf]  [internal] load build definition from Dockerfile
+2026-04-03T03:32:10.720997480Z [inf]  [internal] load build definition from Dockerfile
+2026-04-03T03:32:10.729195547Z [inf]  [internal] load build definition from Dockerfile
+2026-04-03T03:32:10.731882268Z [inf]  [internal] load metadata for docker.io/library/python:3.11-slim
+2026-04-03T03:32:10.731960174Z [inf]  [internal] load metadata for docker.io/library/node:20-slim
+2026-04-03T03:32:10.734759050Z [inf]  [auth] library/node:pull token for registry-1.docker.io
+2026-04-03T03:32:10.734794192Z [inf]  [auth] library/node:pull token for registry-1.docker.io
+2026-04-03T03:32:11.017915544Z [inf]  [internal] load metadata for docker.io/library/python:3.11-slim
+2026-04-03T03:32:11.167920756Z [inf]  [internal] load metadata for docker.io/library/node:20-slim
+2026-04-03T03:32:11.168071535Z [inf]  [internal] load .dockerignore
+2026-04-03T03:32:11.168091136Z [inf]  [internal] load .dockerignore
+2026-04-03T03:32:11.168229318Z [inf]  [internal] load .dockerignore
+2026-04-03T03:32:11.176154367Z [inf]  [internal] load .dockerignore
+2026-04-03T03:32:11.180025147Z [inf]  [frontend-build 6/6] RUN npm run build
+2026-04-03T03:32:11.180071148Z [inf]  [frontend-build 5/6] COPY frontend/ ./
+2026-04-03T03:32:11.180089139Z [inf]  [frontend-build 4/6] RUN npm ci --production=false
+2026-04-03T03:32:11.180101706Z [inf]  [frontend-build 3/6] COPY frontend/package.json frontend/package-lock.json ./
+2026-04-03T03:32:11.180110210Z [inf]  [frontend-build 2/6] WORKDIR /app/frontend
+2026-04-03T03:32:11.180118702Z [inf]  [stage-1 7/7] RUN mkdir -p uploads
+2026-04-03T03:32:11.180129601Z [inf]  [stage-1 5/7] COPY backend/ ./
+2026-04-03T03:32:11.180137425Z [inf]  [stage-1 4/7] RUN pip install --no-cache-dir -r requirements.txt
+2026-04-03T03:32:11.180145867Z [inf]  [stage-1 3/7] COPY backend/requirements.txt ./
+2026-04-03T03:32:11.180156725Z [inf]  [internal] load build context
+2026-04-03T03:32:11.180165945Z [inf]  [stage-1 2/7] WORKDIR /app
+2026-04-03T03:32:11.180174705Z [inf]  [stage-1 6/7] COPY --from=frontend-build /app/frontend/dist ./frontend/dist
+2026-04-03T03:32:11.180185725Z [inf]  [stage-1 1/7] FROM docker.io/library/python:3.11-slim@sha256:9358444059ed78e2975ada2c189f1c1a3144a5dab6f35bff8c981afb38946634
+2026-04-03T03:32:11.180196508Z [inf]  [frontend-build 1/6] FROM docker.io/library/node:20-slim@sha256:1e85773c98c31d4fe5b545e4cb17379e617b348832fb3738b22a08f68dec30f3
+2026-04-03T03:32:11.180224950Z [inf]  [internal] load build context
+2026-04-03T03:32:11.180236271Z [inf]  [frontend-build 1/6] FROM docker.io/library/node:20-slim@sha256:1e85773c98c31d4fe5b545e4cb17379e617b348832fb3738b22a08f68dec30f3
+2026-04-03T03:32:11.180250589Z [inf]  [stage-1 1/7] FROM docker.io/library/python:3.11-slim@sha256:9358444059ed78e2975ada2c189f1c1a3144a5dab6f35bff8c981afb38946634
+2026-04-03T03:32:11.188806044Z [inf]  [stage-1 1/7] FROM docker.io/library/python:3.11-slim@sha256:9358444059ed78e2975ada2c189f1c1a3144a5dab6f35bff8c981afb38946634
+2026-04-03T03:32:11.189096878Z [inf]  [internal] load build context
+2026-04-03T03:32:11.189601477Z [inf]  [frontend-build 1/6] FROM docker.io/library/node:20-slim@sha256:1e85773c98c31d4fe5b545e4cb17379e617b348832fb3738b22a08f68dec30f3
+2026-04-03T03:32:11.205490501Z [inf]  [internal] load build context
+2026-04-03T03:32:11.209778987Z [inf]  [stage-1 2/7] WORKDIR /app
+2026-04-03T03:32:11.209813424Z [inf]  [stage-1 3/7] COPY backend/requirements.txt ./
+2026-04-03T03:32:11.209826158Z [inf]  [stage-1 4/7] RUN pip install --no-cache-dir -r requirements.txt
+2026-04-03T03:32:11.209833237Z [inf]  [stage-1 5/7] COPY backend/ ./
+2026-04-03T03:32:11.209840104Z [inf]  [frontend-build 2/6] WORKDIR /app/frontend
+2026-04-03T03:32:11.209847721Z [inf]  [frontend-build 3/6] COPY frontend/package.json frontend/package-lock.json ./
+2026-04-03T03:32:11.209854409Z [inf]  [frontend-build 4/6] RUN npm ci --production=false
+2026-04-03T03:32:11.209871015Z [inf]  [frontend-build 5/6] COPY frontend/ ./
+2026-04-03T03:32:11.209877484Z [inf]  [frontend-build 6/6] RUN npm run build
+2026-04-03T03:32:11.209883640Z [inf]  [stage-1 6/7] COPY --from=frontend-build /app/frontend/dist ./frontend/dist
+2026-04-03T03:32:11.209890116Z [inf]  [stage-1 7/7] RUN mkdir -p uploads
+2026-04-03T03:32:11.210419501Z [inf]  exporting to docker image format
+2026-04-03T03:32:11.210442673Z [inf]  exporting to image
+2026-04-03T03:32:11.386992710Z [inf]  [auth] sharing credentials for production-us-west2.railway-registry.com
+2026-04-03T03:32:11.387072398Z [inf]  [auth] sharing credentials for production-us-west2.railway-registry.com
+2026-04-03T03:32:11.546437092Z [inf]  importing to docker
+2026-04-03T03:32:13.362647837Z [inf]  importing to docker
+2026-04-03T03:32:18.854719510Z [inf]  [92mBuild time: 8.29 seconds[0m
+2026-04-03T03:32:26.720323545Z [inf]  
+2026-04-03T03:32:26.720362985Z [inf]  =========================
+2026-04-03T03:32:26.720367579Z [inf]  Container failed to start
+2026-04-03T03:32:26.720371433Z [inf]  =========================
+2026-04-03T03:32:26.720376645Z [inf]  
+2026-04-03T03:32:26.720380302Z [inf]  The executable `cd` could not be found.
+2026-04-03T03:32:26.720385670Z [inf]  
