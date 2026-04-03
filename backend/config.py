@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Server ──────────────────────────────────────────
-PORT = int(os.getenv("WS_PORT", "5002"))
+PORT = int(os.getenv("PORT", os.getenv("WS_PORT", "5002")))
 SECRET_KEY = os.getenv("WS_SECRET_KEY", secrets.token_hex(32))
 DEBUG = os.getenv("WS_DEBUG", "0") == "1"
 

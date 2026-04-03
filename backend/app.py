@@ -19,7 +19,13 @@ from executor import execute_workflow, estimate_workflow_cost
 from nodes import get_all_node_definitions
 
 # ── Flask App ────────────────────────────────────────
-app = Flask(__name__, static_folder="../frontend/dist", static_url_path="")
+# In Docker: dist is at ./frontend/dist (copied into backend workdir)
+# In local dev: dist is at ../frontend/dist
+_dist_docker = os.path.join(os.path.dirname(__file__), "frontend", "dist")
+_dist_local = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+_static = _dist_docker if os.path.isdir(_dist_docker) else _dist_local
+
+app = Flask(__name__, static_folder=_static, static_url_path="")
 app.secret_key = config.SECRET_KEY
 app.config["MAX_CONTENT_LENGTH"] = config.MAX_UPLOAD_MB * 1024 * 1024
 
