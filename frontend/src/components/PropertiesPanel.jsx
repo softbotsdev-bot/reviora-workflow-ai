@@ -1,5 +1,6 @@
-import { useWorkflowStore, apiFetch } from '../store';
+import { useWorkflowStore, apiFetch, toast } from '../store';
 import { useCallback, useRef } from 'react';
+import { FiUpload, FiX } from 'react-icons/fi';
 
 export default function PropertiesPanel() {
   const selectedNode = useWorkflowStore((s) => s.selectedNode);
@@ -152,7 +153,7 @@ export default function PropertiesPanel() {
                 {properties[prop.name] ? (
                   <div className="ws-upload-preview">
                     <img src={properties[prop.name]} alt="uploaded" />
-                    <button className="ws-upload-clear" onClick={() => updateProperty(prop.name, '')}>×</button>
+                    <button className="ws-upload-clear" onClick={() => updateProperty(prop.name, '')}><FiX size={14} /></button>
                   </div>
                 ) : (
                   <label className="ws-upload-btn">
@@ -165,7 +166,7 @@ export default function PropertiesPanel() {
                         if (e.target.files[0]) handleFileUpload(prop.name, e.target.files[0]);
                       }}
                     />
-                    <span>📁 Choose File</span>
+                    <FiUpload size={14} /> <span>Choose File</span>
                   </label>
                 )}
               </div>

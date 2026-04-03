@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store';
+import { FiCommand } from 'react-icons/fi';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,7 +23,7 @@ export default function AuthPage() {
       <div className="auth-bg" />
       <div className="auth-card">
         <div className="auth-logo">
-          <div className="auth-logo-icon">◈</div>
+          <div className="auth-logo-icon"><FiCommand size={36} /></div>
           <h1>Reviora Studio</h1>
           <p className="auth-subtitle">Visual AI Workflow Editor</p>
         </div>

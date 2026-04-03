@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { FiX } from 'react-icons/fi';
 
 const SHORTCUTS = [
   // Left column
@@ -49,7 +50,7 @@ export default function KeyboardShortcuts({ isOpen, onClose }) {
       <div className="ws-shortcuts-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ws-shortcuts-header">
           <h2>Keyboard Shortcuts</h2>
-          <button className="ws-shortcuts-close" onClick={onClose}>×</button>
+          <button className="ws-shortcuts-close" onClick={onClose}><FiX size={18} /></button>
         </div>
         <div className="ws-shortcuts-body">
           {SHORTCUTS.map((column, ci) => (
