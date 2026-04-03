@@ -474,6 +474,32 @@ body {
   opacity: 1;
 }
 
+/* Edge delete button */
+.ws-edge-delete {
+  position: absolute; pointer-events: all;
+  opacity: 0; transition: opacity 0.2s;
+}
+.ws-edge-delete button {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; padding: 0;
+}
+.ws-edge-delete button:hover {
+  background: var(--error); border-color: var(--error);
+  color: #fff; transform: scale(1.2);
+}
+/* Show on edge hover — use parent wrapper */
+.react-flow__edge:hover .ws-edge-delete,
+.react-flow__edge.selected .ws-edge-delete {
+  opacity: 1;
+}
+/* Make edges easier to click */
+.react-flow__edge-interaction { stroke-width: 20px !important; }
+/* Reconnectable handle highlight */
+.react-flow__handle.connectable { cursor: crosshair; }
+
 /* ═══════════════════════════════════════════
    PROPERTIES PANEL
    ═══════════════════════════════════════════ */

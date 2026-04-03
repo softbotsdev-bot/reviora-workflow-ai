@@ -7,6 +7,10 @@ import {
   addEdge,
   applyNodeChanges,
   applyEdgeChanges,
+  reconnectEdge,
+  BaseEdge,
+  getBezierPath,
+  EdgeLabelRenderer,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
@@ -21,6 +25,33 @@ import Toolbar from './Toolbar';
 import KeyboardShortcuts from './KeyboardShortcuts';
 import ProfileMenu from './ProfileMenu';
 import { useWorkflowStore, useAuthStore, toast } from '../store';
+
+// Custom edge with delete button
+function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, markerEnd }) {
+  const [edgePath, labelX, labelY] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
+  const onDelete = (evt) => {
+    evt.stopPropagation();
+    const edges = useWorkflowStore.getState().edges;
+    useWorkflowStore.getState().setEdges(edges.filter((e) => e.id !== id));
+  };
+  return (
+    <>
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      <EdgeLabelRenderer>
+        <div
+          className="ws-edge-delete"
+          style={{ transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)` }}
+        >
+          <button onClick={onDelete} title="Delete connection">
+            <FiX size={12} />
+          </button>
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+}
+
+const edgeTypes = { deletable: DeletableEdge };
 
 const nodeTypes = {
   upload: GenericNode,
@@ -212,7 +243,11 @@ export default function WorkflowEditor() {
     [setEdges]
   );
   const onConnect = useCallback(
-    (params) => setEdges(addEdge({ ...params, animated: true, style: { stroke: '#6366f1' } }, useWorkflowStore.getState().edges)),
+    (params) => setEdges(addEdge({ ...params, type: 'deletable', animated: true, style: { stroke: '#6366f1' } }, useWorkflowStore.getState().edges)),
+    [setEdges]
+  );
+  const onReconnect = useCallback(
+    (oldEdge, newConnection) => setEdges(reconnectEdge(oldEdge, newConnection, useWorkflowStore.getState().edges)),
     [setEdges]
   );
   const onNodeClick = useCallback((_, node) => setSelectedNode(node.id), [setSelectedNode]);
@@ -323,18 +358,22 @@ export default function WorkflowEditor() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onReconnect={onReconnect}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
             onDrop={onDrop}
             onDragOver={onDragOver}
             onInit={(instance) => { reactFlowInstance.current = instance; }}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             fitView
             snapToGrid
             snapGrid={[16, 16]}
             connectionLineStyle={{ stroke: '#6366f1', strokeWidth: 2 }}
-            defaultEdgeOptions={{ animated: true, style: { stroke: '#6366f180' } }}
+            defaultEdgeOptions={{ type: 'deletable', animated: true, style: { stroke: '#6366f180' } }}
             proOptions={{ hideAttribution: true }}
+            edgesReconnectable
+            deleteKeyCode={['Delete', 'Backspace']}
           >
             <Background color="#333" gap={16} size={1} variant="dots" />
             <Controls className="ws-controls" />
