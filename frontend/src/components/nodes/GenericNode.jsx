@@ -3,7 +3,7 @@ import { Handle, Position, NodeToolbar, NodeResizer } from '@xyflow/react';
 import {
   FiUpload, FiType, FiImage, FiFilm, FiEdit3, FiZap, FiMove, FiDownload,
   FiCopy, FiTrash2, FiPlay, FiCheck, FiAlertTriangle, FiFolder,
-  FiCrop, FiRefreshCw, FiMoreHorizontal,
+  FiRefreshCw,
 } from 'react-icons/fi';
 import { useWorkflowStore, apiFetch, toast } from '../../store';
 
@@ -75,19 +75,42 @@ function GenericNode({ id, data, selected }) {
 
   return (
     <>
-      {/* Toolbar */}
+      {/* Toolbar — contextual per node type */}
       <NodeToolbar isVisible={selected} position={Position.Top} offset={10}>
         <div className="ws-node-toolbar">
-          <button onClick={() => navigator.clipboard.writeText(id)} title="Copy ID"><FiCopy size={13} /></button>
-          <button title="Edit"><FiEdit3 size={13} /></button>
-          <button title="Crop"><FiCrop size={13} /></button>
-          <button title="Refresh" onClick={() => toast.info('Rerun from main toolbar')}><FiRefreshCw size={13} /></button>
+          {/* Duplicate — all nodes */}
+          <button onClick={() => {
+            const orig = useWorkflowStore.getState().nodes.find(n => n.id === id);
+            if (orig) {
+              const dup = { ...orig, id: `${orig.type}_${Date.now()}`, position: { x: orig.position.x + 40, y: orig.position.y + 40 }, data: { ...orig.data, _status: undefined, _outputs: undefined, _error: undefined } };
+              useWorkflowStore.getState().setNodes([...useWorkflowStore.getState().nodes, dup]);
+              toast.info('Duplicated');
+            }
+          }} title="Duplicate"><FiCopy size={13} /></button>
+
+          {/* Prompt: clear text */}
+          {nodeType === 'prompt' && (
+            <button onClick={() => { updateProp('text', ''); toast.info('Cleared'); }} title="Clear text"><FiRefreshCw size={13} /></button>
+          )}
+
+          {/* Upload: re-upload */}
+          {nodeType === 'upload' && properties.file_url && (
+            <button onClick={() => { updateProp('file_url', ''); updateProp('file_name', ''); }} title="Remove file"><FiRefreshCw size={13} /></button>
+          )}
+
+          {/* Gen/Output nodes: download result */}
+          {['image_gen', 'image_edit', 'image_enhance', 'video_gen', 'video_motion', 'output'].includes(nodeType) && resultUrl && (
+            <button onClick={() => { window.open(resultUrl, '_blank'); }} title="Open result"><FiDownload size={13} /></button>
+          )}
+
+          {/* Delete — all nodes */}
           <button onClick={() => {
             const nodes = useWorkflowStore.getState().nodes;
+            const edges = useWorkflowStore.getState().edges;
             useWorkflowStore.getState().setNodes(nodes.filter((n) => n.id !== id));
+            useWorkflowStore.getState().setEdges(edges.filter((e) => e.source !== id && e.target !== id));
             useWorkflowStore.getState().setSelectedNode(null);
           }} title="Delete" className="toolbar-delete"><FiTrash2 size={13} /></button>
-          <button title="More"><FiMoreHorizontal size={13} /></button>
         </div>
       </NodeToolbar>
 
