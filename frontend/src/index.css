@@ -344,18 +344,45 @@ body {
 
 .ws-node-body { padding: 10px 14px; }
 
+/* Resizable prompt node */
+.ws-node-prompt {
+  display: flex; flex-direction: column;
+  min-width: 260px; min-height: 200px;
+}
+.ws-node-prompt .ws-node-body {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 10px 14px 14px; overflow: hidden;
+}
+.ws-node-prompt .ws-node-prompt-area {
+  flex: 1; display: flex; flex-direction: column; gap: 8px;
+}
+
+/* Resizer handles */
+.ws-resizer-line { border-color: transparent !important; }
+.ws-resizer-handle {
+  width: 8px !important; height: 8px !important;
+  border: 2px solid var(--accent) !important;
+  border-radius: 2px !important; background: var(--bg-secondary) !important;
+  opacity: 0.6;
+}
+.ws-resizer-handle:hover { opacity: 1; }
+
 /* Prompt inline textarea */
 .ws-node-prompt-area { display: flex; flex-direction: column; gap: 6px; }
 .ws-node-inline-textarea {
-  width: 100%; padding: 8px 10px; border-radius: 6px;
+  width: 100%; padding: 10px 12px; border-radius: 8px;
   border: 1px solid var(--border); background: var(--bg-tertiary);
-  color: var(--text-primary); font-size: 12px; font-family: var(--font);
-  resize: vertical; min-height: 60px; line-height: 1.5;
+  color: var(--text-primary); font-size: 13px; font-family: var(--font);
+  resize: none; line-height: 1.5;
   transition: border-color 0.2s;
+}
+.ws-node-inline-textarea.ws-prompt-main {
+  flex: 1; min-height: 80px;
 }
 .ws-node-inline-textarea:focus { outline: none; border-color: var(--accent); }
 .ws-node-inline-textarea.ws-neg {
   min-height: 36px; font-size: 11px; color: var(--text-secondary);
+  flex-shrink: 0;
 }
 .ws-node-inline-textarea::placeholder { color: var(--text-muted); }
 

@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef } from 'react';
-import { Handle, Position, NodeToolbar } from '@xyflow/react';
+import { Handle, Position, NodeToolbar, NodeResizer } from '@xyflow/react';
 import {
   FiUpload, FiType, FiImage, FiFilm, FiEdit3, FiZap, FiMove, FiDownload,
   FiCopy, FiTrash2, FiPlay, FiCheck, FiAlertTriangle, FiFolder,
@@ -90,7 +90,10 @@ function GenericNode({ id, data, selected }) {
         </div>
       </NodeToolbar>
 
-      <div className={`ws-node ${selected ? 'selected' : ''} ${status === 'done' ? 'node-done' : ''} ${status === 'error' ? 'node-error' : ''} ${status === 'running' ? 'node-running' : ''}`}>
+      <div className={`ws-node ${selected ? 'selected' : ''} ${status === 'done' ? 'node-done' : ''} ${status === 'error' ? 'node-error' : ''} ${status === 'running' ? 'node-running' : ''} ${nodeType === 'prompt' ? 'ws-node-prompt' : ''}`}>
+
+        {/* Resizer for prompt nodes */}
+        {nodeType === 'prompt' && <NodeResizer minWidth={240} minHeight={200} isVisible={selected} lineClassName="ws-resizer-line" handleClassName="ws-resizer-handle" />}
 
         {/* Input handles — left edge, labels outside card */}
         {inputs.map((inp, i) => {
@@ -135,18 +138,16 @@ function GenericNode({ id, data, selected }) {
           {nodeType === 'prompt' && (
             <div className="ws-node-prompt-area">
               <textarea
-                className="ws-node-inline-textarea"
+                className="ws-node-inline-textarea ws-prompt-main"
                 value={properties.text || properties.prompt || ''}
                 onChange={(e) => updateProp('text', e.target.value)}
-                placeholder="Enter your prompt here..."
-                rows={3}
+                placeholder="Write your prompt here..."
               />
               <textarea
                 className="ws-node-inline-textarea ws-neg"
                 value={properties.negative_prompt || ''}
                 onChange={(e) => updateProp('negative_prompt', e.target.value)}
                 placeholder="Negative prompt (optional)..."
-                rows={2}
               />
             </div>
           )}
