@@ -116,10 +116,11 @@ export default function WorkflowEditor() {
   const { user, logout } = useAuthStore();
   const reactFlowWrapper = useRef(null);
   const reactFlowInstance = useRef(null);
+  const pendingConnection = useRef(null); // tracks dragged edge for drop-to-add
   const [showWfMenu, setShowWfMenu] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [uiMinimized, setUiMinimized] = useState(false);
-  const [ctxMenu, setCtxMenu] = useState(null); // {x, y, nodeId?}
+  const [ctxMenu, setCtxMenu] = useState(null); // {x, y, nodeId?, edgeDrop?}
 
   // Initialize on mount
   useEffect(() => { initialize(); }, []);
@@ -299,6 +300,35 @@ export default function WorkflowEditor() {
   const onNodeClick = useCallback((_, node) => setSelectedNode(node.id), [setSelectedNode]);
   const onPaneClick = useCallback(() => { setSelectedNode(null); setShowWfMenu(false); setCtxMenu(null); }, [setSelectedNode]);
 
+  // Track connection start for edge-drop
+  const onConnectStart = useCallback((_, params) => {
+    pendingConnection.current = params;
+  }, []);
+  const onConnectEnd = useCallback((event) => {
+    // Check if dropped on empty canvas (not on a handle)
+    const target = event.target;
+    if (target.classList.contains('react-flow__handle')) return;
+
+    const conn = pendingConnection.current;
+    if (!conn) return;
+
+    const { clientX, clientY } = event.changedTouches ? event.changedTouches[0] : event;
+    const flowPos = reactFlowInstance.current?.screenToFlowPosition({ x: clientX, y: clientY });
+    if (!flowPos) return;
+
+    // Determine source handle type for filtering
+    const srcNode = useWorkflowStore.getState().nodes.find(n => n.id === conn.nodeId);
+    const srcDef = srcNode?.data?.definition || {};
+    const srcHandle = (srcDef.outputs || []).find(o => o.name === conn.handleId);
+    const srcType = srcHandle?.type || 'any';
+
+    setCtxMenu({
+      x: clientX, y: clientY, flowPos, nodeId: null,
+      edgeDrop: { sourceNodeId: conn.nodeId, sourceHandleId: conn.handleId, sourceType: srcType },
+    });
+    pendingConnection.current = null;
+  }, []);
+
   // Custom right-click context menu
   const onPaneContextMenu = useCallback((event) => {
     event.preventDefault();
@@ -315,17 +345,41 @@ export default function WorkflowEditor() {
       const def = defs.find((d) => d.type === type) || { type, displayName: type, inputs: [], outputs: [], properties: [] };
       const defaultProps = {};
       (def.properties || []).forEach((p) => { defaultProps[p.name] = p.default ?? ''; });
+      const newId = `${type}_${Date.now()}`;
       const newNode = {
-        id: `${type}_${Date.now()}`,
+        id: newId,
         type,
         position: ctxMenu.flowPos,
         data: { nodeType: type, definition: def, properties: defaultProps },
       };
-      setNodes([...useWorkflowStore.getState().nodes, newNode]);
+      const currentNodes = useWorkflowStore.getState().nodes;
+      setNodes([...currentNodes, newNode]);
+
+      // Auto-connect if this was an edge-drop
+      if (ctxMenu.edgeDrop) {
+        const { sourceNodeId, sourceHandleId, sourceType } = ctxMenu.edgeDrop;
+        // Find a compatible target input on the new node
+        const targetInput = (def.inputs || []).find(inp => {
+          const tType = inp.type || 'any';
+          return sourceType === 'any' || tType === 'any' || sourceType === tType;
+        });
+        if (targetInput) {
+          const newEdge = {
+            id: `e-${sourceNodeId}-${newId}-${Date.now()}`,
+            source: sourceNodeId,
+            sourceHandle: sourceHandleId,
+            target: newId,
+            targetHandle: targetInput.name,
+            type: 'deletable', animated: true, style: { stroke: '#6366f1' },
+          };
+          setEdges([...useWorkflowStore.getState().edges, newEdge]);
+        }
+      }
+
       toast.info(`Added ${def.displayName || type}`);
     }
     setCtxMenu(null);
-  }, [ctxMenu, setNodes]);
+  }, [ctxMenu, setNodes, setEdges]);
   const ctxDeleteNode = useCallback(() => {
     if (ctxMenu?.nodeId) {
       setNodes(useWorkflowStore.getState().nodes.filter(n => n.id !== ctxMenu.nodeId));
@@ -469,6 +523,8 @@ export default function WorkflowEditor() {
             isValidConnection={isValidConnection}
             onPaneContextMenu={onPaneContextMenu}
             onNodeContextMenu={onNodeContextMenu}
+            onConnectStart={onConnectStart}
+            onConnectEnd={onConnectEnd}
             minZoom={0.1}
             maxZoom={3}
             defaultViewport={{ x: 0, y: 0, zoom: 1 }}
