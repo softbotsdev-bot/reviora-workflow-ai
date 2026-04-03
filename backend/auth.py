@@ -114,14 +114,23 @@ def login_user(email: str, password: str) -> tuple:
 
 
 def require_auth(f):
-    """Decorator: require valid JWT in Authorization header."""
+    """Decorator: require valid JWT in Authorization header or ?token= query param."""
     @wraps(f)
     def decorated(*args, **kwargs):
+        token = None
+
+        # 1. Check Authorization header
         auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+
+        # 2. Fallback: check ?token= query param (for SSE/EventSource)
+        if not token:
+            token = request.args.get("token", "")
+
+        if not token:
             return jsonify(error="Token diperlukan"), 401
 
-        token = auth_header[7:]
         payload = _decode_jwt(token)
         if not payload:
             return jsonify(error="Token tidak valid atau expired"), 401

@@ -1,0 +1,61 @@
+2026-04-03T04:18:10.521584742Z [inf]  Starting Container
+2026-04-03T04:18:11.168432967Z [inf]  [Workflow Studio] Starting on port 8080
+2026-04-03T04:18:11.168438209Z [inf]  [Workflow Studio] DB API: https://softbots.pythonanywhere.com/api/call
+2026-04-03T04:18:11.168443123Z [inf]   * Serving Flask app 'app'
+2026-04-03T04:18:11.168448330Z [inf]   * Debug mode: off
+2026-04-03T04:18:11.168453346Z [err]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+2026-04-03T04:18:11.168459111Z [err]   * Running on all addresses (0.0.0.0)
+2026-04-03T04:18:11.168464487Z [err]   * Running on http://127.0.0.1:8080
+2026-04-03T04:18:11.168470610Z [err]   * Running on http://10.178.216.151:8080
+2026-04-03T04:18:11.168478789Z [err]  [33mPress CTRL+C to quit[0m
+2026-04-03T04:18:15.474668439Z [err]  100.64.0.2 - - [03/Apr/2026 04:18:13] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:15.474673199Z [err]  100.64.0.3 - - [03/Apr/2026 04:18:14] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:15.474677658Z [err]  100.64.0.4 - - [03/Apr/2026 04:18:14] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:15.474681896Z [err]  100.64.0.2 - - [03/Apr/2026 04:18:14] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:15.474685829Z [err]  100.64.0.5 - - [03/Apr/2026 04:18:14] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:15.474689975Z [err]  100.64.0.6 - - [03/Apr/2026 04:18:14] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:15.474694407Z [err]  100.64.0.3 - - [03/Apr/2026 04:18:14] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:15.474698603Z [err]  100.64.0.4 - - [03/Apr/2026 04:18:15] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:15.474702907Z [err]  100.64.0.2 - - [03/Apr/2026 04:18:15] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:15.474707481Z [err]  100.64.0.3 - - [03/Apr/2026 04:18:15] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:16.898988545Z [err]  100.64.0.6 - - [03/Apr/2026 04:18:15] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:16.898994562Z [err]  100.64.0.7 - - [03/Apr/2026 04:18:15] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:16.899000038Z [err]  100.64.0.3 - - [03/Apr/2026 04:18:16] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:16.899006005Z [err]  100.64.0.3 - - [03/Apr/2026 04:18:16] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:16.899012158Z [err]  100.64.0.6 - - [03/Apr/2026 04:18:16] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:16.899017747Z [err]  100.64.0.7 - - [03/Apr/2026 04:18:16] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:18.632294250Z [err]  100.64.0.3 - - [03/Apr/2026 04:18:17] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:18.632300891Z [err]  100.64.0.8 - - [03/Apr/2026 04:18:17] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:18.632307987Z [err]  100.64.0.2 - - [03/Apr/2026 04:18:18] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:18.632314901Z [err]  100.64.0.3 - - [03/Apr/2026 04:18:18] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:18.632321913Z [err]  100.64.0.2 - - [03/Apr/2026 04:18:18] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:20.110089978Z [err]  100.64.0.4 - - [03/Apr/2026 04:18:19] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:18:24.775122370Z [err]  100.64.0.9 - - [03/Apr/2026 04:18:23] "[36mGET /assets/index-DXGz6VdC.css HTTP/1.1[0m" 304 -
+2026-04-03T04:18:27.550725332Z [err]  100.64.0.10 - - [03/Apr/2026 04:18:26] "POST /api/workflows HTTP/1.1" 200 -
+2026-04-03T04:19:00.409615566Z [err]  100.64.0.7 - - [03/Apr/2026 04:18:53] "[36mGET / HTTP/1.1[0m" 304 -
+2026-04-03T04:19:00.409629765Z [err]  100.64.0.7 - - [03/Apr/2026 04:18:54] "[36mGET /assets/index-DXGz6VdC.css HTTP/1.1[0m" 304 -
+2026-04-03T04:19:00.409642808Z [err]  100.64.0.2 - - [03/Apr/2026 04:18:54] "[36mGET /assets/index-xinVUcxL.js HTTP/1.1[0m" 304 -
+2026-04-03T04:19:00.409653923Z [err]  100.64.0.3 - - [03/Apr/2026 04:18:54] "GET /api/nodes HTTP/1.1" 200 -
+2026-04-03T04:20:50.504857762Z [err]  100.64.0.9 - - [03/Apr/2026 04:20:44] "POST /api/workflows/run HTTP/1.1" 200 -
+2026-04-03T04:20:50.504864479Z [err]  Traceback (most recent call last):
+2026-04-03T04:20:50.504869499Z [err]    File "/app/executor.py", line 159, in execute_workflow
+2026-04-03T04:20:50.504874898Z [err]      node_outputs = node.execute(node_inputs, properties, context)
+2026-04-03T04:20:50.504878707Z [err]                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-03T04:20:50.504883411Z [err]    File "/app/nodes/image_gen_node.py", line 140, in execute
+2026-04-03T04:20:50.504887410Z [err]      raise ValueError(f"Leonardo API error: {error_data.get('error', resp.status_code)}")
+2026-04-03T04:20:50.504891384Z [err]  ValueError: Leonardo API error: Unexpected variable num_images
+2026-04-03T04:20:50.504895154Z [err]  100.64.0.10 - - [03/Apr/2026 04:20:45] "[31m[1mGET /api/workflows/run/0aec1525e25e4cda/events?token=eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAxLCAiZW1haWwiOiAicmV2aW9yYUBkZXYuY29tIiwgIm5hbWUiOiAicmV2aW9yYSIsICJleHAiOiAxNzc1NDQ3NjU4LjAwNzAyLCAiaWF0IjogMTc3NTE4ODQ1OC4wMDcwMjI2fQ.UOc9-hNjsIhjo_ZE95aGL5lk_PqLPi0GdopV8mDzOF4 HTTP/1.1[0m" 401 -
+2026-04-03T04:20:59.084333597Z [err]  100.64.0.3 - - [03/Apr/2026 04:20:58] "POST /api/workflows/run HTTP/1.1" 200 -
+2026-04-03T04:20:59.084341212Z [err]  Traceback (most recent call last):
+2026-04-03T04:20:59.084347883Z [err]    File "/app/executor.py", line 159, in execute_workflow
+2026-04-03T04:20:59.084355423Z [err]      node_outputs = node.execute(node_inputs, properties, context)
+2026-04-03T04:20:59.084361789Z [err]                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-04-03T04:20:59.084372752Z [err]    File "/app/nodes/image_gen_node.py", line 140, in execute
+2026-04-03T04:20:59.084377587Z [err]      raise ValueError(f"Leonardo API error: {error_data.get('error', resp.status_code)}")
+2026-04-03T04:20:59.084395757Z [err]  ValueError: Leonardo API error: Unexpected variable num_images
+2026-04-03T04:20:59.084401341Z [err]  Traceback (most recent call last):
+2026-04-03T04:20:59.084406814Z [err]    File "/app/executor.py", line 156, in execute_workflow
+2026-04-03T04:20:59.084411306Z [err]      raise ValueError(validation_err)
+2026-04-03T04:20:59.084416124Z [err]  ValueError: Input 'file' is required
+2026-04-03T04:20:59.084420446Z [err]  100.64.0.6 - - [03/Apr/2026 04:20:58] "[31m[1mGET /api/workflows/run/fc546d926e324bc6/events?token=eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJzdWIiOiAxLCAiZW1haWwiOiAicmV2aW9yYUBkZXYuY29tIiwgIm5hbWUiOiAicmV2aW9yYSIsICJleHAiOiAxNzc1NDQ3NjU4LjAwNzAyLCAiaWF0IjogMTc3NTE4ODQ1OC4wMDcwMjI2fQ.UOc9-hNjsIhjo_ZE95aGL5lk_PqLPi0GdopV8mDzOF4 HTTP/1.1[0m" 401 -
+2026-04-03T04:21:03.826013315Z [err]  100.64.0.4 - - [03/Apr/2026 04:21:03] "[36mGET /assets/index-DXGz6VdC.css HTTP/1.1[0m" 304 -

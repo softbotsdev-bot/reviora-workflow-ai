@@ -1,7 +1,6 @@
 """Image Generate Node — generate images via Leonardo API."""
 import requests
 import time
-import os
 from .base import BaseNode
 
 LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest"
@@ -59,29 +58,20 @@ class ImageGenNode(BaseNode):
             "options": [
                 {"value": "1K", "label": "1K"},
                 {"value": "2K", "label": "2K"},
-                {"value": "4K", "label": "4K"},
             ],
             "default": "2K",
-        },
-        {
-            "name": "num_images",
-            "type": "number",
-            "label": "Number of Images",
-            "min": 1,
-            "max": 4,
-            "default": 1,
         },
     ]
 
     # Dimension lookup table
     _DIMS = {
-        "1:1":  {"1K": (1024, 1024), "2K": (2048, 2048), "4K": (4096, 4096)},
-        "2:3":  {"1K": (848, 1264),  "2K": (1696, 2528), "4K": (3392, 5056)},
-        "3:2":  {"1K": (1264, 848),  "2K": (2528, 1696), "4K": (5056, 3392)},
-        "3:4":  {"1K": (896, 1200),  "2K": (1792, 2400), "4K": (3584, 4800)},
-        "4:3":  {"1K": (1200, 896),  "2K": (2400, 1792), "4K": (4800, 3584)},
-        "9:16": {"1K": (768, 1376),  "2K": (1536, 2752), "4K": (3072, 5504)},
-        "16:9": {"1K": (1376, 768),  "2K": (2752, 1536), "4K": (5504, 3072)},
+        "1:1":  {"1K": (1024, 1024), "2K": (2048, 2048)},
+        "2:3":  {"1K": (848, 1264),  "2K": (1696, 2528)},
+        "3:2":  {"1K": (1264, 848),  "2K": (2528, 1696)},
+        "3:4":  {"1K": (896, 1200),  "2K": (1792, 2400)},
+        "4:3":  {"1K": (1200, 896),  "2K": (2400, 1792)},
+        "9:16": {"1K": (768, 1376),  "2K": (1536, 2752)},
+        "16:9": {"1K": (1376, 768),  "2K": (2752, 1536)},
     }
 
     def execute(self, inputs, properties, context):
@@ -99,27 +89,9 @@ class ImageGenNode(BaseNode):
         model_id = properties.get("model", "nano-banana-2")
         ratio = properties.get("aspect_ratio", "1:1")
         quality = properties.get("quality", "2K")
-        num_images = int(properties.get("num_images", 1))
 
         dims = self._DIMS.get(ratio, {}).get(quality, (1024, 1024))
         width, height = dims
-
-        # Build request
-        payload = {
-            "modelId": model_id,
-            "prompt": prompt_text + " Do not include any text, watermark, or logo in the image.",
-            "width": width,
-            "height": height,
-            "num_images": min(num_images, 4),
-        }
-        if negative:
-            payload["negative_prompt"] = negative
-
-        # Add reference image if connected
-        ref = inputs.get("reference")
-        if ref and isinstance(ref, dict) and ref.get("url"):
-            payload["init_image_id"] = ref["url"]
-            payload["init_strength"] = 0.3
 
         headers = {
             "accept": "application/json",
@@ -127,7 +99,22 @@ class ImageGenNode(BaseNode):
             "authorization": f"Bearer {api_key}",
         }
 
-        # 1. Create generation
+        # V2 API format (same as leonardo_api.py in the main bot)
+        params = {
+            "prompt": prompt_text + " Do not include any text, watermark, or logo in the image.",
+            "width": width,
+            "height": height,
+            "quantity": 1,
+            "prompt_enhance": "OFF",
+        }
+
+        payload = {
+            "model": model_id,
+            "public": False,
+            "parameters": params,
+        }
+
+        # 1. Create generation (V2 endpoint)
         resp = requests.post(
             f"{LEONARDO_BASE}/v2/generations",
             json=payload,
@@ -136,15 +123,19 @@ class ImageGenNode(BaseNode):
         )
 
         if resp.status_code != 200:
-            error_data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
-            raise ValueError(f"Leonardo API error: {error_data.get('error', resp.status_code)}")
+            try:
+                error_data = resp.json()
+                err_msg = error_data.get("error", error_data.get("message", str(resp.status_code)))
+            except Exception:
+                err_msg = f"HTTP {resp.status_code}"
+            raise ValueError(f"Leonardo API error: {err_msg}")
 
         gen_data = resp.json()
         gen_id = gen_data.get("sdGenerationJob", {}).get("generationId")
         if not gen_id:
-            raise ValueError("No generation ID returned")
+            raise ValueError(f"No generation ID returned: {gen_data}")
 
-        # 2. Poll for result
+        # 2. Poll for result (V1 polling endpoint)
         for _ in range(90):  # ~450s max
             time.sleep(5)
             poll_resp = requests.get(
