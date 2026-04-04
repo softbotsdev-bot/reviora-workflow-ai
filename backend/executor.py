@@ -55,6 +55,21 @@ def _topological_sort(nodes: list, edges: list) -> list:
     return result
 
 
+def _get_upstream_nodes(target_id: str, edges: list, node_lookup: dict) -> set:
+    """Recursively collect all upstream node IDs that feed into target_id."""
+    upstream = set()
+    stack = [target_id]
+    while stack:
+        current = stack.pop()
+        for edge in edges:
+            if edge["target"] == current:
+                src = edge["source"]
+                if src not in upstream and src in node_lookup:
+                    upstream.add(src)
+                    stack.append(src)
+    return upstream
+
+
 def _build_input_map(node_id: str, edges: list, outputs: dict) -> dict:
     """
     Build the input dict for a node by looking at incoming edges
@@ -90,6 +105,7 @@ def execute_workflow(
     on_node_start=None,
     on_node_complete=None,
     on_node_error=None,
+    target_node_id=None,
 ) -> dict:
     """
     Execute a complete workflow graph.
@@ -130,6 +146,13 @@ def execute_workflow(
     errors = {}
     results = []  # Final output nodes' results
     start_time = time.time()
+
+    # If target_node_id specified, only execute nodes needed for that target
+    if target_node_id and target_node_id in node_lookup:
+        needed = _get_upstream_nodes(target_node_id, edges, node_lookup)
+        needed.add(target_node_id)
+        exec_order = [nid for nid in exec_order if nid in needed]
+        total = len(exec_order)
 
     for idx, node_id in enumerate(exec_order):
         node_data = node_lookup.get(node_id)

@@ -283,6 +283,7 @@ def api_run_workflow():
     graph = data.get("graph", {})
     nodes = graph.get("nodes", [])
     edges = graph.get("edges", [])
+    target_node_id = data.get("target_node_id")  # None = run all
 
     if not nodes:
         return jsonify(ok=False, error="Workflow kosong"), 400
@@ -315,7 +316,7 @@ def api_run_workflow():
     # Start execution in background
     t = threading.Thread(
         target=_run_workflow_bg,
-        args=(run_id, graph, g.user_id, tg_id, leo_key, freepik_key),
+        args=(run_id, graph, g.user_id, tg_id, leo_key, freepik_key, target_node_id),
         daemon=True,
     )
     t.start()
@@ -323,7 +324,7 @@ def api_run_workflow():
     return jsonify(ok=True, run_id=run_id, estimated_cost=cost)
 
 
-def _run_workflow_bg(run_id, graph, ws_user_id, tg_user_id, leo_key, freepik_key):
+def _run_workflow_bg(run_id, graph, ws_user_id, tg_user_id, leo_key, freepik_key, target_node_id=None):
     """Background thread: execute workflow and push SSE events."""
     q = _run_progress.get(run_id)
 
@@ -358,6 +359,7 @@ def _run_workflow_bg(run_id, graph, ws_user_id, tg_user_id, leo_key, freepik_key
             on_node_start=on_start,
             on_node_complete=on_complete,
             on_node_error=on_error,
+            target_node_id=target_node_id,
         )
         _push("workflow_done", result)
     except Exception as e:

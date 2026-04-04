@@ -331,7 +331,7 @@ function GenericNode({ id, data, selected }) {
               disabled={status === 'running' || useWorkflowStore.getState().isRunning}
               onClick={(e) => {
                 e.stopPropagation();
-                useWorkflowStore.getState().runWorkflow();
+                useWorkflowStore.getState().runWorkflow(id);
               }}
             >
               {status === 'running' ? (

@@ -260,8 +260,8 @@ export const useWorkflowStore = create((set, get) => ({
     toast.info('New workflow created');
   },
 
-  // Execution
-  runWorkflow: async () => {
+  // Execution — targetNodeId: only run up to that node (null = run all)
+  runWorkflow: async (targetNodeId = null) => {
     const { nodes, edges, isRunning } = get();
     if (isRunning) return;
     if (nodes.length === 0) {
@@ -270,12 +270,15 @@ export const useWorkflowStore = create((set, get) => ({
     }
 
     set({ isRunning: true, runProgress: null, runResults: null });
-    toast.info('Menjalankan workflow...');
+    toast.info(targetNodeId ? 'Running node...' : 'Menjalankan workflow...');
 
     try {
+      const body = { graph: { nodes, edges } };
+      if (targetNodeId) body.target_node_id = targetNodeId;
+
       const data = await apiFetch('/api/workflows/run', {
         method: 'POST',
-        body: JSON.stringify({ graph: { nodes, edges } }),
+        body: JSON.stringify(body),
       });
 
       if (!data.ok) {
