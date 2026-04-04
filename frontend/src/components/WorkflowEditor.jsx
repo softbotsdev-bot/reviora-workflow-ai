@@ -28,9 +28,14 @@ import KeyboardShortcuts from './KeyboardShortcuts';
 import ProfileMenu from './ProfileMenu';
 import { useWorkflowStore, useAuthStore, toast } from '../store';
 
+// Edge colors by data type
+const EDGE_COLORS = { text: '#e8a838', file: '#3b82f6', any: '#6366f1' };
+
 // Custom edge with delete button
-function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, markerEnd }) {
+function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style, markerEnd, data }) {
   const [edgePath, labelX, labelY] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
+  const color = data?.color || style?.stroke || '#6366f1';
+  const edgeStyle = { ...style, stroke: color, strokeWidth: 2.5, opacity: 0.85 };
   const onDelete = (evt) => {
     evt.stopPropagation();
     const edges = useWorkflowStore.getState().edges;
@@ -38,7 +43,7 @@ function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition,
   };
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      <BaseEdge path={edgePath} markerEnd={markerEnd} style={edgeStyle} />
       <EdgeLabelRenderer>
         <div
           className="ws-edge-delete"
@@ -290,7 +295,15 @@ export default function WorkflowEditor() {
         return;
       }
 
-      setEdges(addEdge({ ...params, type: 'deletable', animated: true, style: { stroke: '#6366f1' } }, useWorkflowStore.getState().edges));
+      // Determine edge color from source handle type
+      const srcType = srcOutput?.type || 'any';
+      const edgeColor = EDGE_COLORS[srcType] || EDGE_COLORS.any;
+
+      setEdges(addEdge({
+        ...params, type: 'deletable', animated: false,
+        style: { stroke: edgeColor, strokeWidth: 2.5 },
+        data: { color: edgeColor, sourceType: srcType },
+      }, useWorkflowStore.getState().edges));
     },
     [setEdges]
   );
@@ -365,13 +378,16 @@ export default function WorkflowEditor() {
           return sourceType === 'any' || tType === 'any' || sourceType === tType;
         });
         if (targetInput) {
+          const edgeColor = EDGE_COLORS[sourceType] || EDGE_COLORS.any;
           const newEdge = {
             id: `e-${sourceNodeId}-${newId}-${Date.now()}`,
             source: sourceNodeId,
             sourceHandle: sourceHandleId,
             target: newId,
             targetHandle: targetInput.name,
-            type: 'deletable', animated: true, style: { stroke: '#6366f1' },
+            type: 'deletable', animated: false,
+            style: { stroke: edgeColor, strokeWidth: 2.5 },
+            data: { color: edgeColor, sourceType },
           };
           setEdges([...useWorkflowStore.getState().edges, newEdge]);
         }
@@ -525,8 +541,8 @@ export default function WorkflowEditor() {
             edgeTypes={edgeTypes}
             snapToGrid
             snapGrid={[16, 16]}
-            connectionLineStyle={{ stroke: '#6366f1', strokeWidth: 2 }}
-            defaultEdgeOptions={{ type: 'deletable', animated: true, style: { stroke: '#6366f180' } }}
+            connectionLineStyle={{ stroke: '#e8a838', strokeWidth: 2.5 }}
+            defaultEdgeOptions={{ type: 'deletable', animated: false, style: { stroke: '#6366f1', strokeWidth: 2.5 } }}
             proOptions={{ hideAttribution: true }}
             edgesReconnectable
             deleteKeyCode={['Delete', 'Backspace']}

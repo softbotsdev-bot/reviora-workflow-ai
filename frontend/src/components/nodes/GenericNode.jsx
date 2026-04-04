@@ -97,11 +97,20 @@ function GenericNode({ id, data, selected }) {
       || (def.inputs || []).find(i => i.type === 'file')
       || (def.inputs || [])[0];
     if (tgtInput) {
+      // Determine edge color from source handle type
+      const srcDef = thisNode?.data?.definition || {};
+      const srcOut = (srcDef.outputs || []).find(o => o.name === sourceHandle);
+      const srcType = srcOut?.type || 'file';
+      const EDGE_COLORS = { text: '#e8a838', file: '#3b82f6', any: '#6366f1' };
+      const edgeColor = EDGE_COLORS[srcType] || EDGE_COLORS.any;
+
       const edge = {
         id: `e-${id}-${newId}-${Date.now()}`,
         source: id, sourceHandle,
         target: newId, targetHandle: tgtInput.name,
-        type: 'deletable', animated: true, style: { stroke: '#6366f1' },
+        type: 'deletable', animated: false,
+        style: { stroke: edgeColor, strokeWidth: 2.5 },
+        data: { color: edgeColor, sourceType: srcType },
       };
       store.setEdges([...store.edges, edge]);
     }
