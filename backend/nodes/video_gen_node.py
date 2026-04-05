@@ -19,56 +19,43 @@ LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest"
 # start_frame: True if start frame (imageId) is supported
 # end_frame: True if endFrameImage / end_frame is supported
 # has_audio: True if motion_has_audio is supported
+# model_key: matches models_stub.py / models_config.py in Telegram bot
+# so check_user_can_generate works with the same plan-based allowed_models
 MODEL_CONFIG = {
-    "VEO3_1": {
-        "label": "Veo 3.1", "api": "v1", "model_param": "VEO3_1",
-        "durations": [4, 6, 8], "start_frame": True, "end_frame": True,
-    },
-    "VEO3_1FAST": {
-        "label": "Veo 3.1 Fast", "api": "v1", "model_param": "VEO3_1FAST",
-        "durations": [4, 6, 8], "start_frame": True, "end_frame": True,
-    },
-    "VEO3_0": {
-        "label": "Veo 3.0", "api": "v1", "model_param": "VEO3_0",
-        "durations": [4, 6, 8], "start_frame": True, "end_frame": False,
-    },
-    "VEO3FAST": {
-        "label": "Veo 3.0 Fast", "api": "v1", "model_param": "VEO3FAST",
-        "durations": [4, 6, 8], "start_frame": True, "end_frame": False,
-    },
-    "KLING2_1": {
-        "label": "Kling 2.1 Pro", "api": "v1", "model_param": "KLING2_1",
-        "durations": [5, 10], "start_frame": True, "end_frame": True,
-    },
-    "Kling2_5": {
-        "label": "Kling 2.5 Turbo", "api": "v1", "model_param": "Kling2_5",
-        "durations": [5, 10], "start_frame": True, "end_frame": True,
-    },
-    "kling-2.6": {
-        "label": "Kling 2.6", "api": "v2", "model_param": "kling-2.6",
-        "durations": [5, 10], "start_frame": True, "end_frame": False,
-    },
-    "kling-3.0": {
+    "vid_kling_30": {
         "label": "Kling 3.0", "api": "v2", "model_param": "kling-3.0",
         "durations": [3, 5, 8, 10, 15], "start_frame": True, "end_frame": True,
-        "has_audio": True,
+        "has_audio": True, "ratios": {"16:9", "9:16", "1:1"},
     },
-    "kling-video-o-1": {
-        "label": "Kling O1", "api": "v2", "model_param": "kling-video-o-1",
+    "vid_kling_26": {
+        "label": "Kling 2.6", "api": "v2", "model_param": "kling-2.6",
         "durations": [5, 10], "start_frame": True, "end_frame": True,
+        "ratios": {"16:9", "9:16", "1:1"},
     },
-    "kling-video-o-3": {
+    "vid_kling_o3": {
         "label": "Kling O3", "api": "v2", "model_param": "kling-video-o-3",
-        "durations": [3, 5, 8, 10, 12], "start_frame": True, "end_frame": True,
-        "has_audio": True,
+        "durations": [3, 5, 8, 10], "start_frame": True, "end_frame": True,
+        "has_audio": True, "ratios": {"16:9", "9:16", "1:1"},
     },
-    "seedance-1.0-pro": {
-        "label": "Seedance 1.0 Pro", "api": "v2", "model_param": "seedance-1.0-pro",
-        "durations": [4, 6, 8, 10], "start_frame": True, "end_frame": True,
+    "vid_veo_31_fast": {
+        "label": "Veo 3.1 Fast", "api": "v1", "model_param": "VEO3_1FAST",
+        "durations": [4, 6, 8], "start_frame": True, "end_frame": True,
+        "ratios": {"16:9", "9:16"},
     },
-    "seedance-1.0-lite": {
-        "label": "Seedance 1.0 Lite", "api": "v2", "model_param": "seedance-1.0-lite",
-        "durations": [4, 6, 8, 10], "start_frame": True, "end_frame": True,
+    "vid_veo_31": {
+        "label": "Veo 3.1", "api": "v1", "model_param": "VEO3_1",
+        "durations": [4, 6, 8], "start_frame": True, "end_frame": True,
+        "ratios": {"16:9", "9:16"},
+    },
+    "vid_sora_2": {
+        "label": "Sora 2", "api": "v2", "model_param": "sora-2",
+        "durations": [4, 8, 12], "start_frame": True, "end_frame": False,
+        "ratios": {"16:9", "9:16"},
+    },
+    "vid_sora_2_pro": {
+        "label": "Sora 2 Pro", "api": "v2", "model_param": "sora-2-pro",
+        "durations": [4, 8, 12], "start_frame": True, "end_frame": False,
+        "ratios": {"16:9", "9:16"},
     },
 }
 
@@ -76,6 +63,12 @@ RATIO_DIMS = {
     "16:9": {"w": 1920, "h": 1080},
     "9:16": {"w": 1080, "h": 1920},
     "1:1":  {"w": 1440, "h": 1440},
+}
+
+# Sora 2 uses 720p
+SORA_RATIO_DIMS = {
+    "16:9": {"w": 1280, "h": 720},
+    "9:16": {"w": 720, "h": 1280},
 }
 
 
@@ -99,7 +92,7 @@ class VideoGenNode(BaseNode):
             "type": "select",
             "label": "Model",
             "options": [{"value": k, "label": v["label"]} for k, v in MODEL_CONFIG.items()],
-            "default": "kling-2.6",
+            "default": "vid_kling_26",
         },
         {
             "name": "aspect_ratio",
@@ -184,14 +177,19 @@ class VideoGenNode(BaseNode):
         if not api_key:
             raise ValueError("No Leonardo API key available")
 
-        model_key = properties.get("model", "kling-2.6")
+        model_key = properties.get("model", "vid_kling_26")
         config = MODEL_CONFIG.get(model_key)
         if not config:
             raise ValueError(f"Unknown model: {model_key}")
 
         ratio = properties.get("aspect_ratio", "16:9")
         duration = int(properties.get("duration", 5))
-        dims = RATIO_DIMS.get(ratio, {"w": 1920, "h": 1080})
+
+        # Sora 2 uses 720p dimensions
+        if model_key.startswith("vid_sora"):
+            dims = SORA_RATIO_DIMS.get(ratio, {"w": 1280, "h": 720})
+        else:
+            dims = RATIO_DIMS.get(ratio, {"w": 1920, "h": 1080})
 
         # Validate duration against model's supported values
         valid_durations = config.get("durations", [5])
@@ -322,10 +320,8 @@ class VideoGenNode(BaseNode):
 
     def estimate_cost(self, properties):
         costs = {
-            "VEO3_1": 3.90, "VEO3_1FAST": 1.39, "VEO3_0": 3.90, "VEO3FAST": 1.39,
-            "KLING2_1": 2.50, "Kling2_5": 1.85,
-            "kling-2.6": 1.85, "kling-3.0": 3.78,
-            "kling-video-o-1": 3.50, "kling-video-o-3": 4.20,
-            "seedance-1.0-pro": 2.80, "seedance-1.0-lite": 1.50,
+            "vid_kling_30": 3.78, "vid_kling_26": 1.85, "vid_kling_o3": 4.20,
+            "vid_veo_31_fast": 1.39, "vid_veo_31": 3.90,
+            "vid_sora_2": 1.70, "vid_sora_2_pro": 4.95,
         }
         return costs.get(properties.get("model", ""), 2.0)
