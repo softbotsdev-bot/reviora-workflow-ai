@@ -257,17 +257,18 @@ body {
   font-size: 10px; color: var(--text-muted); font-family: var(--font);
 }
 
-/* Sidebar collapse toggle */
+/* Sidebar collapse toggle — sits on the right edge of sidebar */
 .ws-sidebar-toggle {
-  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-  z-index: 10; width: 18px; height: 44px;
+  position: relative;
+  z-index: 10; width: 16px; min-width: 16px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--bg-elevated); border: 1px solid var(--border);
+  background: var(--bg-secondary); border: 1px solid var(--border);
   border-left: none; border-radius: 0 6px 6px 0;
   color: var(--text-muted); cursor: pointer;
-  font-size: 10px; transition: all 0.15s;
+  font-size: 9px; transition: all 0.15s;
+  margin-left: -1px;
 }
-.ws-sidebar-toggle:hover { color: var(--text-primary); background: var(--surface); }
+.ws-sidebar-toggle:hover { color: var(--text-primary); background: var(--bg-elevated); }
 
 /* ═══════════════════════════════════════════
    CANVAS

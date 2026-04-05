@@ -537,16 +537,18 @@ export default function WorkflowEditor() {
       </header>
 
       <div className="ws-main">
-        {!uiMinimized && !sidebarCollapsed && <Sidebar />}
-
-        {/* Sidebar collapse toggle */}
-        <button
-          className="ws-sidebar-toggle"
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-        >
-          {sidebarCollapsed ? '▶' : '◀'}
-        </button>
+        {!uiMinimized && (
+          <div className="ws-sidebar-wrapper" style={{ position: 'relative', display: 'flex' }}>
+            {!sidebarCollapsed && <Sidebar />}
+            <button
+              className="ws-sidebar-toggle"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+            >
+              {sidebarCollapsed ? '▶' : '◀'}
+            </button>
+          </div>
+        )}
 
         <div className="ws-canvas-wrapper" ref={reactFlowWrapper}>
           <ReactFlow
