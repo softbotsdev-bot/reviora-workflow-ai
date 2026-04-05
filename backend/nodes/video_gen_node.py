@@ -117,9 +117,13 @@ class VideoGenNode(BaseNode):
             "type": "select",
             "label": "Duration (seconds)",
             "options": [
+                {"value": "3", "label": "3s"},
+                {"value": "4", "label": "4s"},
                 {"value": "5", "label": "5s"},
+                {"value": "6", "label": "6s"},
                 {"value": "8", "label": "8s"},
                 {"value": "10", "label": "10s"},
+                {"value": "15", "label": "15s"},
             ],
             "default": "5",
         },
@@ -184,6 +188,13 @@ class VideoGenNode(BaseNode):
         ratio = properties.get("aspect_ratio", "16:9")
         duration = int(properties.get("duration", 5))
         dims = RATIO_DIMS.get(ratio, {"w": 1920, "h": 1080})
+
+        # Validate duration against model's supported values
+        valid_durations = config.get("durations", [5])
+        if duration not in valid_durations:
+            # Pick nearest valid duration
+            duration = min(valid_durations, key=lambda d: abs(d - duration))
+            print(f"[VideoGen] Duration adjusted to {duration}s for model {model_key}")
 
         headers = {
             "accept": "application/json",
