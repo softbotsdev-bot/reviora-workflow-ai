@@ -25,6 +25,25 @@ const HANDLE_TYPE_COLORS = {
   any:  '#6b7280',   // gray — accepts anything
 };
 
+// Force download — works for cross-origin URLs and data URLs
+async function forceDownload(url, filename) {
+  try {
+    if (url.startsWith('data:')) {
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      return;
+    }
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  } catch {
+    window.open(url, '_blank');
+  }
+}
+
 function GenericNode({ id, data, selected }) {
   const nodeType = data?.nodeType || 'unknown';
   const def = data?.definition || {};
@@ -139,10 +158,7 @@ function GenericNode({ id, data, selected }) {
           {/* Download / Full View (when image/video) */}
           {hasImage && (
             <>
-              <button onClick={() => {
-                const a = document.createElement('a');
-                a.href = imageUrl; a.download = properties.file_name || 'download'; a.click();
-              }} title="Download"><FiDownload size={13} /></button>
+              <button onClick={() => forceDownload(imageUrl, properties.file_name || 'download.jpg')} title="Download"><FiDownload size={13} /></button>
               <button onClick={() => setLightbox(true)} title="Full View"><FiMaximize2 size={13} /></button>
               <div className="ws-toolbar-sep" />
             </>
@@ -378,10 +394,7 @@ function GenericNode({ id, data, selected }) {
           <div className="ws-lightbox-content" onClick={(e) => e.stopPropagation()}>
             <img src={imageUrl} alt="Full view" className="ws-lightbox-img" />
             <div className="ws-lightbox-actions">
-              <button onClick={() => {
-                const a = document.createElement('a');
-                a.href = imageUrl; a.download = properties.file_name || 'download'; a.click();
-              }}><FiDownload size={16} /> Download</button>
+              <button onClick={() => forceDownload(imageUrl, properties.file_name || 'download.jpg')}><FiDownload size={16} /> Download</button>
               <button onClick={() => setLightbox(false)}><FiX size={16} /> Close</button>
             </div>
           </div>
