@@ -175,7 +175,7 @@ function GenericNode({ id, data, selected }) {
             <>
               <button onClick={() => spawnConnectedNode('image_enhance', nodeType === 'upload' ? 'file' : 'image', 'image')} title="Enhance Image"><FiZap size={13} /></button>
               <button onClick={() => spawnConnectedNode('image_edit', nodeType === 'upload' ? 'file' : 'image', 'reference')} title="Edit Image"><FiEdit3 size={13} /></button>
-              <button onClick={() => spawnConnectedNode('video_gen', nodeType === 'upload' ? 'file' : 'image', 'reference')} title="Animate / Generate Video"><FiFilm size={13} /></button>
+              <button onClick={() => spawnConnectedNode('video_gen', nodeType === 'upload' ? 'file' : 'image', 'start_frame')} title="Animate / Generate Video"><FiFilm size={13} /></button>
               <div className="ws-toolbar-sep" />
             </>
           )}
