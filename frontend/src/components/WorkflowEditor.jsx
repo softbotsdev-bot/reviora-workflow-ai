@@ -326,7 +326,12 @@ export default function WorkflowEditor() {
     [setEdges]
   );
   const onNodeClick = useCallback((_, node) => setSelectedNode(node.id), [setSelectedNode]);
-  const onPaneClick = useCallback(() => { setSelectedNode(null); setShowWfMenu(false); setCtxMenu(null); }, [setSelectedNode]);
+  const edgeDropTimestamp = useRef(0);
+  const onPaneClick = useCallback(() => {
+    // Don't clear context menu if edge was just dropped (within 300ms)
+    if (Date.now() - edgeDropTimestamp.current < 300) return;
+    setSelectedNode(null); setShowWfMenu(false); setCtxMenu(null);
+  }, [setSelectedNode]);
 
   // Track connection start for edge-drop
   const onConnectStart = useCallback((_, params) => {
@@ -354,6 +359,7 @@ export default function WorkflowEditor() {
     const srcHandle = (srcDef.outputs || []).find(o => o.name === conn.handleId);
     const srcType = srcHandle?.type || 'any';
 
+    edgeDropTimestamp.current = Date.now();
     setCtxMenu({
       x: clientX, y: clientY, flowPos, nodeId: null,
       edgeDrop: { sourceNodeId: conn.nodeId, sourceHandleId: conn.handleId, sourceType: srcType },
