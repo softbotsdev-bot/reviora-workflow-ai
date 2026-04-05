@@ -140,6 +140,18 @@ export default function WorkflowEditor() {
     return () => window.removeEventListener('beforeunload', handler);
   }, [hasUnsavedChanges]);
 
+  // Autosave — debounced 2s after changes
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const timer = setTimeout(() => {
+      const { isRunning, isSaving } = useWorkflowStore.getState();
+      if (!isRunning && !isSaving) {
+        useWorkflowStore.getState().saveWorkflow(true);
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [hasUnsavedChanges, nodes, edges]);
+
   // Global keyboard shortcuts
   useEffect(() => {
     const handler = (e) => {

@@ -191,7 +191,7 @@ export const useWorkflowStore = create((set, get) => ({
     }
   },
 
-  saveWorkflow: async () => {
+  saveWorkflow: async (silent = false) => {
     const { currentId, currentName, nodes, edges, isSaving } = get();
     if (isSaving) return false;
 
@@ -210,15 +210,15 @@ export const useWorkflowStore = create((set, get) => ({
       if (data.ok) {
         set({ currentId: data.id, hasUnsavedChanges: false });
         localStorage.setItem('ws_last_wf', data.id);
-        toast.success('Workflow tersimpan!');
+        if (!silent) toast.success('Workflow tersimpan!');
         // Refresh list
         get().listWorkflows();
         return true;
       }
-      toast.error(data.error || 'Gagal menyimpan');
+      if (!silent) toast.error(data.error || 'Gagal menyimpan');
       return false;
     } catch (e) {
-      toast.error('Gagal menyimpan workflow');
+      if (!silent) toast.error('Gagal menyimpan workflow');
       return false;
     } finally {
       set({ isSaving: false });
