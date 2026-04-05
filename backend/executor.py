@@ -106,6 +106,7 @@ def execute_workflow(
     on_node_complete=None,
     on_node_error=None,
     target_node_id=None,
+    existing_outputs=None,
 ) -> dict:
     """
     Execute a complete workflow graph.
@@ -147,6 +148,13 @@ def execute_workflow(
     results = []  # Final output nodes' results
     start_time = time.time()
 
+    # Seed with existing outputs from previously completed nodes
+    if existing_outputs:
+        for nid, out in existing_outputs.items():
+            if nid in node_lookup:
+                outputs[nid] = out
+                print(f"[Executor] Pre-loaded outputs for {nid}")
+
     # If target_node_id specified, only execute nodes needed for that target
     if target_node_id and target_node_id in node_lookup:
         needed = _get_upstream_nodes(target_node_id, edges, node_lookup)
@@ -161,6 +169,15 @@ def execute_workflow(
 
         node_type = node_data.get("type", "unknown")
         properties = node_data.get("data", {}).get("properties", {})
+
+        # Skip nodes that already have outputs (from previous runs)
+        if node_id in outputs and node_id != target_node_id:
+            print(f"[Executor] Skipping {node_id} ({node_type}) — using cached outputs")
+            if on_node_start:
+                on_node_start(node_id, node_type, idx, total)
+            if on_node_complete:
+                on_node_complete(node_id, node_type, outputs[node_id], idx, total)
+            continue
 
         # Notify start
         if on_node_start:

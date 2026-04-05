@@ -274,7 +274,19 @@ export const useWorkflowStore = create((set, get) => ({
 
     try {
       const body = { graph: { nodes, edges } };
-      if (targetNodeId) body.target_node_id = targetNodeId;
+      if (targetNodeId) {
+        body.target_node_id = targetNodeId;
+        // Collect existing outputs from completed nodes so backend can skip them
+        const existingOutputs = {};
+        nodes.forEach((n) => {
+          if (n.data?._status === 'done' && n.data?._outputs && n.id !== targetNodeId) {
+            existingOutputs[n.id] = n.data._outputs;
+          }
+        });
+        if (Object.keys(existingOutputs).length > 0) {
+          body.existing_outputs = existingOutputs;
+        }
+      }
 
       const data = await apiFetch('/api/workflows/run', {
         method: 'POST',
