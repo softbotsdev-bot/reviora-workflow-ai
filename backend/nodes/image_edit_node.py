@@ -66,15 +66,21 @@ class ImageEditNode(BaseNode):
         if not upload_url or not image_id:
             return None
 
-        # Download source image
-        img_resp = requests.get(image_url, timeout=60)
-        if img_resp.status_code != 200:
-            return None
+        # Download source image (or decode base64 data URL)
+        import json, base64 as b64mod
+
+        if image_url.startswith("data:"):
+            header, b64data = image_url.split(",", 1)
+            img_bytes = b64mod.b64decode(b64data)
+        else:
+            img_resp = requests.get(image_url, timeout=60)
+            if img_resp.status_code != 200:
+                return None
+            img_bytes = img_resp.content
 
         # Upload to presigned URL
-        import json
         fields = json.loads(fields_str) if isinstance(fields_str, str) else fields_str
-        files = {"file": ("image.jpg", img_resp.content, "image/jpeg")}
+        files = {"file": ("image.jpg", img_bytes, "image/jpeg")}
         requests.post(upload_url, data=fields, files=files, timeout=60)
 
         return image_id

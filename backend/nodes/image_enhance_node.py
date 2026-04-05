@@ -75,14 +75,21 @@ class ImageEnhanceNode(BaseNode):
         fields_str = upload_data.get("fields")
 
         # Download and re-upload
-        img_resp = requests.get(image_url, timeout=60)
-        if img_resp.status_code != 200:
-            raise ValueError("Failed to download source image")
+        import json, base64 as b64mod
 
-        import json
+        if image_url.startswith("data:"):
+            # Decode base64 data URL in-memory
+            header, b64data = image_url.split(",", 1)
+            img_bytes = b64mod.b64decode(b64data)
+        else:
+            img_resp = requests.get(image_url, timeout=60)
+            if img_resp.status_code != 200:
+                raise ValueError("Failed to download source image")
+            img_bytes = img_resp.content
+
         fields = json.loads(fields_str) if isinstance(fields_str, str) else fields_str
         requests.post(upload_url, data=fields,
-                      files={"file": ("img.jpg", img_resp.content, "image/jpeg")},
+                      files={"file": ("img.jpg", img_bytes, "image/jpeg")},
                       timeout=60)
 
         # Create upscale variation
