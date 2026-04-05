@@ -295,7 +295,12 @@ export const useWorkflowStore = create((set, get) => ({
 
       evtSource.addEventListener('node_start', (e) => {
         const d = JSON.parse(e.data);
-        set({ runProgress: { ...d, stage: 'running' } });
+        set((s) => ({
+          runProgress: { ...d, stage: 'running' },
+          nodes: s.nodes.map((n) =>
+            n.id === d.node_id ? { ...n, data: { ...n.data, _status: 'running', _error: null } } : n
+          ),
+        }));
       });
 
       evtSource.addEventListener('node_complete', (e) => {
