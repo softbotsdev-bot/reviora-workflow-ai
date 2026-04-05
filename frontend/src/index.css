@@ -1124,3 +1124,61 @@ body {
   background: var(--surface); transform: translateY(-1px);
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ═══════════════════════════════════════════
+   EDGE DELETE BUTTON
+   ═══════════════════════════════════════════ */
+.ws-edge-delete {
+  position: absolute;
+  pointer-events: all;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.react-flow__edge:hover .ws-edge-delete,
+.ws-edge-delete:hover {
+  opacity: 1;
+}
+.ws-edge-delete button {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  border: 1.5px solid var(--border-hover);
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  color: var(--error);
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.ws-edge-delete button:hover {
+  background: var(--error);
+  color: #fff;
+  border-color: var(--error);
+  transform: scale(1.2);
+}
+
+/* ═══════════════════════════════════════════
+   HANDLE — bigger hit area for easier connecting
+   ═══════════════════════════════════════════ */
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+  min-width: 10px;
+  min-height: 10px;
+}
+.react-flow__handle::after {
+  content: '';
+  position: absolute;
+  top: -8px; left: -8px; right: -8px; bottom: -8px;
+  border-radius: 50%;
+}
+.react-flow__handle:hover {
+  transform: scale(1.4);
+  transition: transform 0.12s;
+}
+
+/* Edge updater (reconnect grab area) — bigger */
+.react-flow__edgeupdater {
+  width: 20px !important;
+  height: 20px !important;
+  cursor: move;
+}

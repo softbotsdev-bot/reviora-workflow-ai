@@ -43,6 +43,8 @@ function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition,
   };
   return (
     <>
+      {/* Invisible fat path for easier click targeting */}
+      <BaseEdge path={edgePath} style={{ ...edgeStyle, strokeWidth: 20, stroke: 'transparent', opacity: 0 }} />
       <BaseEdge path={edgePath} markerEnd={markerEnd} style={edgeStyle} />
       <EdgeLabelRenderer>
         <div
@@ -50,7 +52,7 @@ function DeletableEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition,
           style={{ transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)` }}
         >
           <button onClick={onDelete} title="Delete connection">
-            <FiX size={12} />
+            <FiX size={14} />
           </button>
         </div>
       </EdgeLabelRenderer>
@@ -331,9 +333,13 @@ export default function WorkflowEditor() {
     pendingConnection.current = params;
   }, []);
   const onConnectEnd = useCallback((event) => {
-    // Check if dropped on empty canvas (not on a handle)
+    // Check if dropped on a valid handle — if so, connection succeeded, skip
     const target = event.target;
-    if (target.classList.contains('react-flow__handle')) return;
+    const isHandle = target.closest('.react-flow__handle');
+    if (isHandle) {
+      pendingConnection.current = null;
+      return;
+    }
 
     const conn = pendingConnection.current;
     if (!conn) return;
@@ -557,6 +563,8 @@ export default function WorkflowEditor() {
             defaultEdgeOptions={{ type: 'deletable', animated: false, style: { stroke: '#6366f1', strokeWidth: 2.5 } }}
             proOptions={{ hideAttribution: true }}
             edgesReconnectable
+            reconnectRadius={25}
+            connectionRadius={25}
             deleteKeyCode={['Delete', 'Backspace']}
             isValidConnection={isValidConnection}
             onPaneContextMenu={onPaneContextMenu}
