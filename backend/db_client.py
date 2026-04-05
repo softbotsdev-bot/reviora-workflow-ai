@@ -56,8 +56,8 @@ def get_user(user_id):
 def get_user_plan(user_id):
     return _call("get_user_plan", user_id)
 
-def check_user_can_generate(user_id, model_type="image"):
-    return _call("check_user_can_generate", user_id, model_type)
+def check_user_can_generate(user_id, model_key="", content_type="image"):
+    return _call("check_user_can_generate", user_id, model_key, content_type)
 
 def increment_user_usage(user_id, model_type="image"):
     return _call("increment_user_usage", user_id, model_type)

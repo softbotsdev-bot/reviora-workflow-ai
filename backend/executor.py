@@ -195,9 +195,47 @@ def execute_workflow(
             if validation_err:
                 raise ValueError(validation_err)
 
+            # ── Credit check for billable nodes ──
+            billable_types = {"image_gen", "image_edit", "image_enhance", "video_gen", "video_motion"}
+            tg_user_id = context.get("telegram_user_id")
+            is_billable = node_type in billable_types
+
+            if is_billable and tg_user_id:
+                content_type = "video" if node_type in ("video_gen", "video_motion") else "image"
+                model_key = properties.get("model", "")
+                try:
+                    can_result = db.check_user_can_generate(tg_user_id, model_key, content_type)
+                    # Result can be (bool, str) tuple or list
+                    if isinstance(can_result, (list, tuple)):
+                        allowed, msg = can_result[0], can_result[1] if len(can_result) > 1 else ""
+                    else:
+                        allowed, msg = bool(can_result), ""
+                    if not allowed:
+                        raise ValueError(f"Kuota habis: {msg}")
+                except (RuntimeError, ConnectionError) as e:
+                    print(f"[Executor] Credit check failed (non-blocking): {e}")
+                    # Non-blocking: if DB is unreachable, proceed anyway
+
             # Execute
             node_outputs = node.execute(node_inputs, properties, context)
             outputs[node_id] = node_outputs
+
+            # ── Increment usage after success ──
+            if is_billable and tg_user_id:
+                content_type = "video" if node_type in ("video_gen", "video_motion") else "image"
+                try:
+                    db.increment_user_usage(tg_user_id, content_type)
+                    print(f"[Executor] Usage incremented: {tg_user_id} +1 {content_type}")
+                except Exception as ue:
+                    print(f"[Executor] Usage increment failed: {ue}")
+
+                # Track API key usage
+                api_key = context.get("leonardo_api_key")
+                if api_key:
+                    try:
+                        db.increment_key_usage(api_key)
+                    except Exception:
+                        pass
 
             # Check for output nodes — collect results
             if "_output" in node_outputs:
