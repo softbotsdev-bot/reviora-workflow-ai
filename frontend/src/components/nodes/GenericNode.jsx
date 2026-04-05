@@ -268,10 +268,12 @@ function GenericNode({ id, data, selected }) {
           {nodeType === 'prompt' && (
             <div className="ws-node-prompt-area">
               <textarea
-                className="ws-node-inline-textarea ws-prompt-main"
+                className="ws-node-inline-textarea ws-prompt-main nodrag nopan nowheel"
                 value={properties.text || properties.prompt || ''}
                 onChange={(e) => updateProp('text', e.target.value)}
                 placeholder="Write your prompt here..."
+                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
               />
             </div>
           )}
