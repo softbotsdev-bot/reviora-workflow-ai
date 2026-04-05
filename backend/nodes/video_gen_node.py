@@ -274,11 +274,15 @@ class VideoGenNode(BaseNode):
 
         resp_data = resp.json()
 
-        # Extract generation ID — different response formats
+        # Extract generation ID — different response formats per API version
         gen_id = None
         if api_version == "v1":
-            gen_id = resp_data.get("sdGenerationJob", {}).get("generationId")
+            # v1 returns: {"motionVideoGenerationJob": {"generationId": "..."}}
+            gen_id = resp_data.get("motionVideoGenerationJob", {}).get("generationId")
+            if not gen_id:
+                gen_id = resp_data.get("sdGenerationJob", {}).get("generationId")
         else:
+            # v2 returns: {"sdGenerationJob": {"generationId": "..."}}
             gen_id = resp_data.get("sdGenerationJob", {}).get("generationId")
             if not gen_id:
                 gen_id = resp_data.get("generationId")
