@@ -25,8 +25,33 @@ const HANDLE_TYPE_COLORS = {
   any:  '#6b7280',   // gray — accepts anything
 };
 
+// Generate download filename: reviora_YYYYMMDD_HHmmss.ext
+function getDownloadName(url) {
+  const now = new Date();
+  const dt = now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') + '_' +
+    String(now.getHours()).padStart(2, '0') +
+    String(now.getMinutes()).padStart(2, '0') +
+    String(now.getSeconds()).padStart(2, '0');
+  // Detect extension
+  let ext = 'jpg';
+  if (url.startsWith('data:')) {
+    const mime = url.split(';')[0].split(':')[1] || '';
+    if (mime.includes('png')) ext = 'png';
+    else if (mime.includes('webp')) ext = 'webp';
+    else if (mime.includes('mp4') || mime.includes('video')) ext = 'mp4';
+  } else {
+    const path = url.split('?')[0];
+    const m = path.match(/\.(jpg|jpeg|png|webp|mp4|gif)$/i);
+    if (m) ext = m[1].toLowerCase() === 'jpeg' ? 'jpg' : m[1].toLowerCase();
+  }
+  return `reviora_${dt}.${ext}`;
+}
+
 // Force download — works for cross-origin URLs and data URLs
-async function forceDownload(url, filename) {
+async function forceDownload(url) {
+  const filename = getDownloadName(url);
   try {
     if (url.startsWith('data:')) {
       const a = document.createElement('a');
@@ -158,7 +183,7 @@ function GenericNode({ id, data, selected }) {
           {/* Download / Full View (when image/video) */}
           {hasImage && (
             <>
-              <button onClick={() => forceDownload(imageUrl, properties.file_name || 'download.jpg')} title="Download"><FiDownload size={13} /></button>
+              <button onClick={() => forceDownload(imageUrl)} title="Download"><FiDownload size={13} /></button>
               <button onClick={() => setLightbox(true)} title="Full View"><FiMaximize2 size={13} /></button>
               <div className="ws-toolbar-sep" />
             </>
@@ -394,7 +419,7 @@ function GenericNode({ id, data, selected }) {
           <div className="ws-lightbox-content" onClick={(e) => e.stopPropagation()}>
             <img src={imageUrl} alt="Full view" className="ws-lightbox-img" />
             <div className="ws-lightbox-actions">
-              <button onClick={() => forceDownload(imageUrl, properties.file_name || 'download.jpg')}><FiDownload size={16} /> Download</button>
+              <button onClick={() => forceDownload(imageUrl)}><FiDownload size={16} /> Download</button>
               <button onClick={() => setLightbox(false)}><FiX size={16} /> Close</button>
             </div>
           </div>
