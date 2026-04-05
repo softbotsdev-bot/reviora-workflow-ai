@@ -59,7 +59,7 @@ MODEL_CONFIG = {
     },
     "kling-video-o-3": {
         "label": "Kling O3", "api": "v2", "model_param": "kling-video-o-3",
-        "durations": [3, 5, 8, 10, 15], "start_frame": True, "end_frame": True,
+        "durations": [3, 5, 8, 10, 12], "start_frame": True, "end_frame": True,
         "has_audio": True,
     },
     "seedance-1.0-pro": {
