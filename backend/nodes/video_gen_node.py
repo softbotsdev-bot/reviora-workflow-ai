@@ -114,20 +114,24 @@ class VideoGenNode(BaseNode):
         },
         {
             "name": "duration",
-            "type": "select",
+            "type": "dynamic_select",
             "label": "Duration (seconds)",
-            "options": [
-                {"value": "3", "label": "3s"},
-                {"value": "4", "label": "4s"},
-                {"value": "5", "label": "5s"},
-                {"value": "6", "label": "6s"},
-                {"value": "8", "label": "8s"},
-                {"value": "10", "label": "10s"},
-                {"value": "15", "label": "15s"},
-            ],
+            "depends_on": "model",
             "default": "5",
         },
     ]
+
+    # Exposed to frontend via /api/nodes — model capabilities
+    MODEL_META = {
+        k: {
+            "label": v["label"],
+            "durations": v["durations"],
+            "start_frame": v.get("start_frame", False),
+            "end_frame": v.get("end_frame", False),
+            "has_audio": v.get("has_audio", False),
+        }
+        for k, v in MODEL_CONFIG.items()
+    }
 
     def _upload_image_to_leonardo(self, image_url, headers):
         """Upload image (URL or base64) to Leonardo, return init_image_id."""

@@ -89,7 +89,20 @@ export default function PropertiesPanel() {
               <select
                 className="ws-prop-select"
                 value={properties[prop.name] ?? prop.default ?? ''}
-                onChange={(e) => updateProperty(prop.name, e.target.value)}
+                onChange={(e) => {
+                  updateProperty(prop.name, e.target.value);
+                  // If this is a model selector and there's a dynamic_select depending on it,
+                  // reset the dependent to the first valid option
+                  if (prop.name === 'model') {
+                    const meta = def.model_meta?.[e.target.value];
+                    if (meta?.durations) {
+                      const durProp = defProperties.find(p => p.depends_on === 'model');
+                      if (durProp) {
+                        updateProperty(durProp.name, String(meta.durations[0]));
+                      }
+                    }
+                  }
+                }}
               >
                 {(prop.options || []).map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -98,6 +111,31 @@ export default function PropertiesPanel() {
                 ))}
               </select>
             )}
+
+            {/* Dynamic Select — options depend on another property (e.g. duration depends on model) */}
+            {prop.type === 'dynamic_select' && (() => {
+              const parentVal = properties[prop.depends_on] ?? '';
+              const meta = def.model_meta?.[parentVal];
+              const durations = meta?.durations || [5];
+              const options = durations.map(d => ({ value: String(d), label: `${d}s` }));
+              const currentVal = properties[prop.name] ?? prop.default ?? '';
+              // If current value not in options, show first
+              const validVal = options.find(o => o.value === currentVal) ? currentVal : options[0]?.value;
+              if (validVal !== currentVal) {
+                setTimeout(() => updateProperty(prop.name, validVal), 0);
+              }
+              return (
+                <select
+                  className="ws-prop-select"
+                  value={validVal}
+                  onChange={(e) => updateProperty(prop.name, e.target.value)}
+                >
+                  {options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              );
+            })()}
 
             {/* Text input */}
             {prop.type === 'text' && (

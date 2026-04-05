@@ -45,7 +45,7 @@ class BaseNode(ABC):
 
     def to_dict(self) -> dict:
         """Serialize node definition for frontend."""
-        return {
+        d = {
             "type": self.NODE_TYPE,
             "category": self.CATEGORY,
             "displayName": self.DISPLAY_NAME,
@@ -55,3 +55,6 @@ class BaseNode(ABC):
             "outputs": self.OUTPUTS,
             "properties": self.PROPERTIES,
         }
+        if hasattr(self, 'MODEL_META'):
+            d["model_meta"] = self.MODEL_META
+        return d
