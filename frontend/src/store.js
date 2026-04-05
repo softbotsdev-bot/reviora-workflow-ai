@@ -326,12 +326,16 @@ export const useWorkflowStore = create((set, get) => ({
 
       evtSource.addEventListener('workflow_done', (e) => {
         const result = JSON.parse(e.data);
-        set({ isRunning: false, runResults: result, runProgress: null });
+        set({ isRunning: false, runResults: null, runProgress: null });
         evtSource.close();
+        const elapsed = result.elapsed ? ` (${result.elapsed}s)` : '';
         if (result.status === 'completed') {
-          toast.success('Workflow selesai!');
+          toast.success(`✅ Selesai${elapsed}`);
+        } else if (result.status === 'partial') {
+          const errCount = result.errors ? Object.keys(result.errors).length : 0;
+          toast.warning(`⚠️ Selesai dengan ${errCount} error${elapsed}`);
         } else {
-          toast.warning('Workflow selesai dengan error');
+          toast.error(`❌ Workflow gagal${elapsed}`);
         }
       });
 

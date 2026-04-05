@@ -605,43 +605,7 @@ export default function WorkflowEditor() {
             </div>
           )}
 
-          {/* Run Results Overlay */}
-          {runResults && (
-            <div className="ws-results-overlay">
-              <div className="ws-results-card">
-                <h3 className="ws-results-title">
-                  {runResults.status === 'completed' && <FiCheckCircle size={20} className="ws-icon-success" />}
-                  {runResults.status === 'partial' && <FiAlertTriangle size={20} className="ws-icon-warning" />}
-                  {runResults.status !== 'completed' && runResults.status !== 'partial' && <FiXCircle size={20} className="ws-icon-error" />}
-                  {runResults.status === 'completed' ? ' Workflow Complete' :
-                   runResults.status === 'partial' ? ' Partial Results' : ' Workflow Failed'}
-                </h3>
-                {runResults.elapsed && <p className="ws-results-time">Elapsed: {runResults.elapsed}s</p>}
 
-                {runResults.results?.map((r, i) => (
-                  <div key={i} className="ws-result-item">
-                    <span className="ws-result-label">{r.label}</span>
-                    {r.data?.url && (
-                      r.data.type === 'video'
-                        ? <video src={r.data.url} controls className="ws-result-media" />
-                        : <img src={r.data.url} alt={r.label} className="ws-result-media" />
-                    )}
-                    {r.data?.url && <a href={r.data.url} download className="ws-download-btn"><FiDownload size={14} /> Download</a>}
-                  </div>
-                ))}
-
-                {runResults.errors && Object.keys(runResults.errors).length > 0 && (
-                  <div className="ws-result-errors">
-                    {Object.entries(runResults.errors).map(([nid, err]) => (
-                      <div key={nid} className="ws-result-error"><strong>{nid}:</strong> {err}</div>
-                    ))}
-                  </div>
-                )}
-
-                <button className="ws-close-results" onClick={() => useWorkflowStore.setState({ runResults: null })}>Close</button>
-              </div>
-            </div>
-          )}
         </div>
 
         {selectedNode && <PropertiesPanel />}
