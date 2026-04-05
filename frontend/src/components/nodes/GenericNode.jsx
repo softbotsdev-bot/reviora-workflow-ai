@@ -286,7 +286,10 @@ function GenericNode({ id, data, selected }) {
                     <span>{properties.file_name || 'uploaded file'}</span>
                   </div>
                   <div className="ws-upload-img-wrap">
-                    <img src={properties.file_url} alt="uploaded" className="ws-upload-img" />
+                    {/\.(mp4|mov|webm|avi)/i.test(properties.file_name || '') || (properties.file_url && properties.file_url.startsWith('data:video'))
+                      ? <video src={properties.file_url} controls className="ws-upload-img" />
+                      : <img src={properties.file_url} alt="uploaded" className="ws-upload-img" />
+                    }
                     <button className="ws-upload-remove" onClick={() => { updateProp('file_url', ''); updateProp('file_name', ''); }} title="Remove">
                       <FiTrash2 size={12} />
                     </button>
@@ -295,7 +298,7 @@ function GenericNode({ id, data, selected }) {
                     <input ref={fileRef} type="file" accept="image/*,video/*" style={{ display: 'none' }}
                       onChange={(e) => { if (e.target.files[0]) handleUpload(e.target.files[0]); }}
                     />
-                    + Replace Image
+                    + Replace {/\.(mp4|mov|webm|avi)/i.test(properties.file_name || '') ? 'Video' : 'File'}
                   </label>
                 </div>
               ) : (
