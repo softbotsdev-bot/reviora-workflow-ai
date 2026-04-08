@@ -31,15 +31,6 @@ const CATEGORIES = [
     defaultOpen: true,
     nodes: [
       { type: 'video_gen', label: 'Generate Video', icon: FiFilm },
-      { type: 'video_motion', label: 'Video Motion', icon: FiMove },
-    ],
-  },
-  {
-    name: 'Output',
-    icon: FiDownload,
-    defaultOpen: true,
-    nodes: [
-      { type: 'output', label: 'Output', icon: FiDownload },
     ],
   },
 ];

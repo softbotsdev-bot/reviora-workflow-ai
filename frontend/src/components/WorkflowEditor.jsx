@@ -248,8 +248,7 @@ export default function WorkflowEditor() {
           e.preventDefault(); addNodeToCanvas('video_gen', rf); break;
         case 'u':
           e.preventDefault(); addNodeToCanvas('upload', rf); break;
-        case 'o':
-          e.preventDefault(); addNodeToCanvas('output', rf); break;
+
         case 'n':
           e.preventDefault(); useWorkflowStore.getState().newWorkflow(); break;
       }
@@ -612,9 +611,6 @@ export default function WorkflowEditor() {
                     <button onClick={() => ctxAddNode('image_enhance')}><FiZap size={13} /> Enhance Image</button>
                     <div className="ws-ctx-sep" />
                     <button onClick={() => ctxAddNode('video_gen')}><FiFilm size={13} /> Generate Video</button>
-                    <button onClick={() => ctxAddNode('video_motion')}><FiMove size={13} /> Video Motion</button>
-                    <div className="ws-ctx-sep" />
-                    <button onClick={() => ctxAddNode('output')}><FiDownload size={13} /> Output</button>
                   </>
                 )}
               </div>
