@@ -130,7 +130,7 @@ body {
 .ws-topbar {
   height: 48px; display: flex; align-items: center; justify-content: space-between;
   padding: 0 16px; background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border); z-index: 10;
+  border-bottom: 1px solid var(--border); z-index: 20; position: relative;
 }
 .ws-topbar-left { display: flex; align-items: center; gap: 12px; }
 .ws-logo { font-size: 22px; color: var(--accent); cursor: pointer; }
