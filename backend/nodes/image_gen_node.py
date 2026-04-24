@@ -153,6 +153,11 @@ class ImageGenNode(BaseNode):
             raise ValueError(f"Leonardo API error: {err_msg}")
 
         gen_data = resp.json()
+        if isinstance(gen_data, list):
+            gen_data = gen_data[0] if gen_data else {}
+        if not isinstance(gen_data, dict):
+            gen_data = {}
+            
         # V2 API returns {"generate": {"generationId": "..."}}, V1 returns {"sdGenerationJob": {"generationId": "..."}}
         gen_id = (
             gen_data.get("generate", {}).get("generationId") or

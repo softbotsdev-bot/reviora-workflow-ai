@@ -151,7 +151,16 @@ class ImageEditNode(BaseNode):
         if resp.status_code != 200:
             raise ValueError(f"Leonardo API error: {resp.status_code}")
 
-        gen_id = resp.json().get("sdGenerationJob", {}).get("generationId")
+        resp_data = resp.json()
+        if isinstance(resp_data, list):
+            resp_data = resp_data[0] if resp_data else {}
+        if not isinstance(resp_data, dict):
+            resp_data = {}
+            
+        gen_id = resp_data.get("sdGenerationJob", {}).get("generationId")
+        if not gen_id:
+            gen_id = resp_data.get("generationId")
+            
         if not gen_id:
             raise ValueError("No generation ID returned")
 

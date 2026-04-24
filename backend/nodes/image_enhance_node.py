@@ -140,6 +140,11 @@ class ImageEnhanceNode(BaseNode):
             raise ValueError(f"Universal Upscaler failed ({var_resp.status_code}): {err_body}")
 
         resp_data = var_resp.json()
+        if isinstance(resp_data, list):
+            resp_data = resp_data[0] if resp_data else {}
+        if not isinstance(resp_data, dict):
+            resp_data = {}
+            
         var_id = resp_data.get("universalUpscaler", {}).get("id")
         if not var_id:
             raise ValueError(f"No upscaler job ID returned: {resp_data}")
