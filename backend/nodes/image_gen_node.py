@@ -5,6 +5,16 @@ from .base import BaseNode
 
 LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest"
 
+MODEL_CONFIG = {
+    "img_nano_banana_2":   {"label": "Nano Banana 2", "model_param": "nano-banana-2"},
+    "img_nano_banana_pro": {"label": "Nano Banana Pro", "model_param": "gemini-image-2"},
+    "img_nano_banana":     {"label": "Nano Banana", "model_param": "gemini-2.5-flash-image"},
+    "img_seedream_45":     {"label": "Seedream 4.5", "model_param": "seedream-4.5"},
+    "img_seedream_4":      {"label": "Seedream 4.0", "model_param": "seedream-4.0"},
+    "img_gpt_15":          {"label": "GPT Image-1.5", "model_param": "gpt-image-1.5"},
+    "img_flux2_pro":       {"label": "FLUX.2 Pro", "model_param": "flux-pro-2.0"},
+}
+
 
 class ImageGenNode(BaseNode):
     NODE_TYPE = "image_gen"
@@ -25,16 +35,8 @@ class ImageGenNode(BaseNode):
             "name": "model",
             "type": "select",
             "label": "Model",
-            "options": [
-                {"value": "nano-banana-2", "label": "Nano Banana 2"},
-                {"value": "gemini-image-2", "label": "Nano Banana Pro"},
-                {"value": "gemini-2.5-flash-image", "label": "Nano Banana"},
-                {"value": "seedream-4.5", "label": "Seedream 4.5"},
-                {"value": "seedream-4.0", "label": "Seedream 4.0"},
-                {"value": "gpt-image-1.5", "label": "GPT Image-1.5"},
-                {"value": "flux-pro-2.0", "label": "FLUX.2 Pro"},
-            ],
-            "default": "nano-banana-2",
+            "options": [{"value": k, "label": v["label"]} for k, v in MODEL_CONFIG.items()],
+            "default": "img_nano_banana_2",
         },
         {
             "name": "aspect_ratio",
@@ -86,7 +88,11 @@ class ImageGenNode(BaseNode):
         if not api_key:
             raise ValueError("No Leonardo API key available")
 
-        model_id = properties.get("model", "nano-banana-2")
+        model_key = properties.get("model", "img_nano_banana_2")
+        model_config = MODEL_CONFIG.get(model_key)
+        if not model_config:
+            raise ValueError(f"Unknown model: {model_key}")
+        model_id = model_config["model_param"]
         ratio = properties.get("aspect_ratio", "1:1")
         quality = properties.get("quality", "2K")
 

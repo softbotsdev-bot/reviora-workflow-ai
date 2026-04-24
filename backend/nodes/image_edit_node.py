@@ -5,6 +5,11 @@ from .base import BaseNode
 
 LEONARDO_BASE = "https://cloud.leonardo.ai/api/rest"
 
+MODEL_CONFIG = {
+    "img_nano_banana_2":   {"label": "Nano Banana 2", "model_param": "nano-banana-2"},
+    "img_nano_banana_pro": {"label": "Nano Banana Pro", "model_param": "gemini-image-2"},
+}
+
 
 class ImageEditNode(BaseNode):
     NODE_TYPE = "image_edit"
@@ -25,11 +30,8 @@ class ImageEditNode(BaseNode):
             "name": "model",
             "type": "select",
             "label": "Model",
-            "options": [
-                {"value": "nano-banana-2", "label": "Nano Banana 2"},
-                {"value": "gemini-image-2", "label": "Nano Banana Pro"},
-            ],
-            "default": "nano-banana-2",
+            "options": [{"value": k, "label": v["label"]} for k, v in MODEL_CONFIG.items()],
+            "default": "img_nano_banana_2",
         },
         {
             "name": "strength",
@@ -100,8 +102,18 @@ class ImageEditNode(BaseNode):
         if not api_key:
             raise ValueError("No Leonardo API key available")
 
-        model_id = properties.get("model", "nano-banana-2")
-        strength = float(properties.get("strength", 0.5))
+        model_key = properties.get("model", "img_nano_banana_2")
+        model_config = MODEL_CONFIG.get(model_key)
+        if not model_config:
+            raise ValueError(f"Unknown model: {model_key}")
+        model_id = model_config["model_param"]
+        strength_float = float(properties.get("strength", 0.5))
+        if strength_float < 0.4:
+            strength_enum = "LOW"
+        elif strength_float > 0.6:
+            strength_enum = "HIGH"
+        else:
+            strength_enum = "MID"
 
         # Upload reference image
         init_image_id = self._upload_to_leonardo(image_url, api_key)
@@ -115,13 +127,19 @@ class ImageEditNode(BaseNode):
         }
 
         payload = {
-            "modelId": model_id,
-            "prompt": prompt_text + " Do not include any text, watermark, or logo.",
-            "width": 1024,
-            "height": 1024,
-            "num_images": 1,
-            "init_image_id": init_image_id,
-            "init_strength": strength,
+            "model": model_id,
+            "public": False,
+            "parameters": {
+                "prompt": prompt_text + " Do not include any text, watermark, or logo.",
+                "width": 1024,
+                "height": 1024,
+                "quantity": 1,
+                "guidances": {
+                    "image_reference": [
+                        {"image": {"id": init_image_id, "type": "UPLOADED"}, "strength": strength_enum}
+                    ]
+                }
+            }
         }
 
         resp = requests.post(
