@@ -287,6 +287,10 @@ class VideoGenNode(BaseNode):
             raise ValueError(f"Video API error ({resp.status_code}): {err_body}")
 
         resp_data = resp.json()
+        if isinstance(resp_data, list):
+            resp_data = resp_data[0] if resp_data else {}
+        if not isinstance(resp_data, dict):
+            resp_data = {}
 
         # Extract generation ID — different response formats per API version
         gen_id = None
