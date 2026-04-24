@@ -365,7 +365,18 @@ def _run_workflow_bg(run_id, graph, ws_user_id, tg_user_id, leo_key, freepik_key
         )
         _push("workflow_done", result)
     except Exception as e:
-        _push("workflow_done", {"status": "failed", "errors": {"_": str(e)}, "results": [], "elapsed": 0})
+        err_str = str(e).lower()
+        err_msg = str(e)
+        
+        # Intercept Leonardo API token exhaustion
+        if "401" in err_str or "402" in err_str or "not enough api tokens" in err_str or "insufficient tokens" in err_str:
+            try:
+                db.mark_key_exhausted(leo_key)
+                err_msg = "Sistem telah mengganti API Key karena limit token tercapai. Silakan klik Run kembali."
+            except:
+                pass
+                
+        _push("workflow_done", {"status": "failed", "errors": {"_": err_msg}, "results": [], "elapsed": 0})
     finally:
         # Release API keys
         try:
