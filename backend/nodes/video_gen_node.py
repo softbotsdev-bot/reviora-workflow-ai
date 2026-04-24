@@ -300,8 +300,10 @@ class VideoGenNode(BaseNode):
             if not gen_id:
                 gen_id = resp_data.get("sdGenerationJob", {}).get("generationId")
         else:
-            # v2 returns: {"sdGenerationJob": {"generationId": "..."}}
-            gen_id = resp_data.get("sdGenerationJob", {}).get("generationId")
+            # v2 returns: {"sdGenerationJob": {"generationId": "..."}} or {"generate": {"generationId": "..."}}
+            gen_id = resp_data.get("generate", {}).get("generationId")
+            if not gen_id:
+                gen_id = resp_data.get("sdGenerationJob", {}).get("generationId")
             if not gen_id:
                 gen_id = resp_data.get("generationId")
 
