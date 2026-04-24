@@ -173,10 +173,6 @@ def execute_workflow(
         # Skip nodes that already have outputs (from previous runs)
         if node_id in outputs and node_id != target_node_id:
             print(f"[Executor] Skipping {node_id} ({node_type}) — using cached outputs")
-            if on_node_start:
-                on_node_start(node_id, node_type, idx, total)
-            if on_node_complete:
-                on_node_complete(node_id, node_type, outputs[node_id], idx, total)
             continue
 
         # Notify start
