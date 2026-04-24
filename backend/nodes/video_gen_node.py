@@ -82,6 +82,7 @@ class VideoGenNode(BaseNode):
     INPUTS = [
         {"name": "prompt", "type": "text", "required": True, "label": "Prompt"},
         {"name": "start_frame", "type": "file", "required": False, "label": "Start Frame"},
+        {"name": "end_frame", "type": "file", "required": False, "label": "End Frame"},
     ]
     OUTPUTS = [
         {"name": "video", "type": "file", "label": "Generated Video"},
@@ -204,7 +205,7 @@ class VideoGenNode(BaseNode):
             "authorization": f"Bearer {api_key}",
         }
 
-        # ── Get start frame image if connected ──
+        # ── Get start/end frame image if connected ──
         start_frame_data = inputs.get("start_frame")
         start_frame_url = None
         if start_frame_data and isinstance(start_frame_data, dict):
@@ -213,6 +214,15 @@ class VideoGenNode(BaseNode):
         start_frame_id = None
         if start_frame_url and config.get("start_frame"):
             start_frame_id = self._upload_image_to_leonardo(start_frame_url, headers)
+
+        end_frame_data = inputs.get("end_frame")
+        end_frame_url = None
+        if end_frame_data and isinstance(end_frame_data, dict):
+            end_frame_url = end_frame_data.get("url", "")
+
+        end_frame_id = None
+        if end_frame_url and config.get("end_frame"):
+            end_frame_id = self._upload_image_to_leonardo(end_frame_url, headers)
 
         # ── Build payload based on API version ──
         api_version = config["api"]
@@ -231,6 +241,8 @@ class VideoGenNode(BaseNode):
             if start_frame_id:
                 payload["imageId"] = start_frame_id
                 payload["imageType"] = "UPLOADED"
+            if start_frame_id and end_frame_id:
+                payload["endFrameImage"] = {"id": end_frame_id, "type": "UPLOADED"}
 
             endpoint = f"{LEONARDO_BASE}/v1/generations-image-to-video"
             print(f"[VideoGen] v1 payload: {payload}")
@@ -244,13 +256,17 @@ class VideoGenNode(BaseNode):
                 "height": dims["h"],
             }
 
-            # Add start_frame guidance if available
-            if start_frame_id:
-                params["guidances"] = {
-                    "start_frame": [{
+            # Add start_frame / end_frame guidance if available
+            if start_frame_id or end_frame_id:
+                params["guidances"] = {}
+                if start_frame_id:
+                    params["guidances"]["start_frame"] = [{
                         "image": {"id": start_frame_id, "type": "UPLOADED"}
                     }]
-                }
+                if end_frame_id:
+                    params["guidances"]["end_frame"] = [{
+                        "image": {"id": end_frame_id, "type": "UPLOADED"}
+                    }]
 
             # Audio support for Kling 3.0 / O3
             if config.get("has_audio"):

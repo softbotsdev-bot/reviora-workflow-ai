@@ -106,8 +106,20 @@ function GenericNode({ id, data, selected }) {
     }
   }, [updateProp]);
 
-  const inputs = def.inputs || [];
+  let inputs = def.inputs || [];
   const nodeOutputs = def.outputs || [];
+
+  if (nodeType === 'video_gen' || nodeType === 'video_motion') {
+    const modelKey = properties.model || def.properties?.find(p => p.name === 'model')?.default;
+    const modelMeta = def.model_meta?.[modelKey];
+    if (modelMeta) {
+      inputs = inputs.filter(inp => {
+        if (inp.name === 'start_frame' && !modelMeta.start_frame) return false;
+        if (inp.name === 'end_frame' && !modelMeta.end_frame) return false;
+        return true;
+      });
+    }
+  }
   const resultUrl = outputs?.image?.url || outputs?.video?.url || null;
   const resultType = outputs?.video?.url ? 'video' : 'image';
 
