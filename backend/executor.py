@@ -202,6 +202,20 @@ def execute_workflow(
 
             if is_billable and tg_user_id:
                 content_type = "video" if node_type in ("video_gen", "video_motion") else "image"
+                
+                # Backwards compatibility for old saved workflows
+                old_model_keys = {
+                    "nano-banana-2": "img_nano_banana_2",
+                    "gemini-image-2": "img_nano_banana_pro",
+                    "gemini-2.5-flash-image": "img_nano_banana",
+                    "seedream-4.5": "img_seedream_45",
+                    "seedream-4.0": "img_seedream_4",
+                    "gpt-image-1.5": "img_gpt_15",
+                    "flux-pro-2.0": "img_flux2_pro",
+                }
+                if properties.get("model") in old_model_keys:
+                    properties["model"] = old_model_keys[properties["model"]]
+
                 model_key = properties.get("model", "")
                 try:
                     can_result = db.check_user_can_generate(tg_user_id, model_key, content_type)
