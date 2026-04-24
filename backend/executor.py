@@ -264,6 +264,18 @@ def execute_workflow(
 
         except Exception as e:
             error_msg = str(e)
+            
+            # Intercept Leonardo API token exhaustion
+            err_str = error_msg.lower()
+            if "401" in err_str or "402" in err_str or "not enough api tokens" in err_str or "insufficient tokens" in err_str:
+                api_key = context.get("leonardo_api_key")
+                if api_key:
+                    try:
+                        db.mark_key_exhausted(api_key)
+                    except Exception:
+                        pass
+                error_msg = "Sistem telah mengganti API Key karena limit token tercapai. Silakan klik Run kembali."
+
             errors[node_id] = error_msg
             traceback.print_exc()
 
