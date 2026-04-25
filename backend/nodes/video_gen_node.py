@@ -47,6 +47,11 @@ MODEL_CONFIG = {
         "durations": [4, 6, 8], "start_frame": True, "end_frame": True,
         "ratios": {"16:9", "9:16"},
     },
+    "vid_kling_21_pro": {
+        "label": "Kling 2.1 Pro", "api": "v1", "model_param": "KLING2_1",
+        "durations": [5, 10], "start_frame": True, "end_frame": True,
+        "ratios": {"16:9", "9:16"},
+    },
     "vid_sora_2": {
         "label": "Sora 2", "api": "v2", "model_param": "sora-2",
         "durations": [4, 8, 12], "start_frame": True, "end_frame": False,
